@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Se ejecuta antes de cada commit. Activado con: git config core.hooksPath .githooks
+exec "$(git rev-parse --show-toplevel)/scripts/revisar-secretos.sh"

@@ -1,0 +1,40 @@
+# Compilación
+bin/
+obj/
+publicado/
+publish/
+artifacts/
+TestResults/
+
+# Editores
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+*.swp
+*.bak
+*~
+.DS_Store
+Thumbs.db
+
+# ---- Datos privados: NUNCA se suben ----
+# Configuración personal (ID de QuickConnect, carpeta del NAS, dirección fija...)
+appsettings.Local.json
+appsettings.*.Local.json
+secrets.json
+.env
+.env.*
+# Certificados y llaves (firma del paquete MSIX, etc.)
+*.pfx
+*.p12
+*.pem
+*.key
+*.snk
+# Token de dispositivo 2FA y configuración de la app (por si se copian al proyecto)
+synology-*.txt
+
+# Libros: los EPUB son del usuario, no del código
+*.epub
+*.mobi
+*.pdf

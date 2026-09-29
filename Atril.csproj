@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Atril</RootNamespace>
+    <!-- Versión de Atril. Súbela en cada entrega (MAYOR.MENOR.PARCHE) y anótala en CHANGELOG.md -->
+    <Version>1.0.0</Version>
+    <Product>Atril</Product>
+    <Description>Lector de libros EPUB con biblioteca local y conexión a Synology.</Description>
+  </PropertyGroup>
+
+</Project>

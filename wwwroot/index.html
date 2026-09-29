@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Atril</title>
+<meta name="description" content="Lector de EPUB para navegador y PC">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Instrument+Sans:wght@400;500;600&display=swap">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2c5d8f">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>:root{color-scheme:light}body{margin:0}img{max-width:100%}</style>
+<style>
+/* Layout: library shelf of book spines/cards; opening a book switches to a full-height reading desk with a slim tool bar and a progress rail. */
+:root {
+  --bg: #eef0f2;
+  --surface: #ffffff;
+  --ink: #1b2330;
+  --muted: #5b6676;
+  --line: #d5dae1;
+  --accent: #2c5d8f;
+  --accent-ink: #ffffff;
+  --danger: #b3261e;
+  --page-claro: #fbfbfa; --text-claro: #1d2127;
+  --page-sepia: #f3ead8; --text-sepia: #3b2f22;
+  --page-noche: #15181d; --text-noche: #d7dbe0;
+  --font-display: "Literata", Georgia, "Times New Roman", serif;
+  --font-ui: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111418; --surface: #1a1f26; --ink: #e3e7ec; --muted: #98a2b0; --line: #2c333d;
+    --accent: #7fb0e3; --accent-ink: #0e1620; --danger: #f2877e; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111418; --surface: #1a1f26; --ink: #e3e7ec; --muted: #98a2b0; --line: #2c333d;
+  --accent: #7fb0e3; --accent-ink: #0e1620; --danger: #f2877e; color-scheme: dark;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 15px; line-height: 1.5; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- Library ---------- */
+#library { max-width: 1080px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 48px; display: flex; flex-direction: column; gap: 24px; }
+.lib-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; }
+.brand { display: flex; flex-direction: column; gap: 2px; }
+.brand h1 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 34px; letter-spacing: -0.01em; line-height: 1.1; }
+.brand p { margin: 0; color: var(--muted); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 8px 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+.drop { border: 1.5px dashed var(--line); border-radius: var(--radius); padding: 18px; text-align: center; color: var(--muted); transition: border-color .15s, background .15s; }
+.drop.over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); color: var(--ink); }
+.shelf-label { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 22px 18px; }
+.book { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.cover { aspect-ratio: 2 / 3; max-width: 100%; border-radius: 4px 8px 8px 4px; overflow: hidden; background: var(--surface); border: 1px solid var(--line); cursor: pointer; padding: 0; position: relative; box-shadow: 0 1px 2px rgb(0 0 0 / .06), 0 6px 16px -8px rgb(0 0 0 / .25); }
+.cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cover .gen { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 14px 12px; text-align: left; color: #f4f1ea; }
+.cover .gen b { font-family: var(--font-display); font-size: 17px; line-height: 1.2; font-weight: 600; text-wrap: balance; }
+.cover .gen span { font-size: 12px; opacity: .85; }
+.cover::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: linear-gradient(90deg, rgb(0 0 0 / .18), transparent); z-index: 1; }
+.meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.meta .t { font-weight: 600; font-size: 14px; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.meta .a { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prog { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.bar { flex: 1; height: 3px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); }
+.rm { background: none; border: 0; padding: 0; font-size: 12px; color: var(--muted); cursor: pointer; text-align: left; }
+.rm:hover, .rm.confirm { color: var(--danger); }
+.tag { font-size: 11px; border: 1px solid var(--line); border-radius: 99px; padding: 0 7px; color: var(--muted); }
+.note { color: var(--muted); font-size: 13px; max-width: 65ch; }
+.empty { color: var(--muted); padding: 24px 0; }
+
+/* ---------- Reader ---------- */
+#reader { position: fixed; inset: 0; display: flex; flex-direction: column; background: var(--page); color: var(--text); padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+#reader[data-mode="claro"] { --page: var(--page-claro); --text: var(--text-claro); --rline: rgb(0 0 0 / .1); --rmuted: #6b7380; }
+#reader[data-mode="sepia"] { --page: var(--page-sepia); --text: var(--text-sepia); --rline: rgb(60 40 10 / .15); --rmuted: #7a6a55; }
+#reader[data-mode="noche"] { --page: var(--page-noche); --text: var(--text-noche); --rline: rgb(255 255 255 / .1); --rmuted: #8a929c; }
+.rbar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--rline); min-height: 48px; }
+.rbar .title { flex: 1; min-width: 0; text-align: center; font-size: 13px; color: var(--rmuted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ib { background: none; border: 1px solid transparent; border-radius: 8px; height: 34px; min-width: 34px; padding: 0 8px; cursor: pointer; color: var(--text); display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; }
+.ib:hover { border-color: var(--rline); }
+.ib svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.stage { flex: 1; position: relative; min-height: 0; }
+#viewer { position: absolute; inset: 12px 44px; }
+.turn { position: absolute; top: 0; bottom: 0; width: 44px; background: none; border: 0; cursor: pointer; color: var(--rmuted); display: flex; align-items: center; justify-content: center; }
+.turn:hover { color: var(--text); }
+.turn.prev { left: 0; } .turn.next { right: 0; }
+.turn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.rfoot { display: flex; align-items: center; gap: 12px; padding: 8px 16px 12px; font-size: 12px; color: var(--rmuted); font-variant-numeric: tabular-nums; }
+.rfoot .chap { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#seek { width: min(40%, 320px); accent-color: var(--accent); }
+.loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--rmuted); font-size: 14px; }
+
+.panel { position: absolute; top: 56px; z-index: 5; background: var(--page); color: var(--text); border: 1px solid var(--rline); border-radius: var(--radius); box-shadow: 0 12px 32px -12px rgb(0 0 0 / .35); }
+#toc { left: 12px; width: min(340px, calc(100vw - 24px)); max-height: calc(100% - 80px); overflow: auto; padding: 8px; }
+#toc a { display: block; padding: 7px 10px; border-radius: 6px; color: inherit; text-decoration: none; font-size: 14px; }
+#toc a:hover { background: var(--rline); }
+#toc a.sub { padding-left: 26px; font-size: 13px; color: var(--rmuted); }
+#settings { right: 12px; width: min(300px, calc(100vw - 24px)); padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.row { display: flex; flex-direction: column; gap: 6px; }
+.row > span { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--rmuted); font-weight: 600; }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 1px solid var(--rline); border-radius: 8px; overflow: hidden; }
+.seg button { background: none; border: 0; padding: 7px 4px; cursor: pointer; color: var(--text); font-size: 13px; }
+.seg button + button { border-left: 1px solid var(--rline); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.sw { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--rline); vertical-align: -1px; margin-right: 4px; }
+.size { display: flex; align-items: center; gap: 10px; font-variant-numeric: tabular-nums; }
+.size output { flex: 1; text-align: center; font-size: 13px; }
+.size button { border: 1px solid var(--rline); background: none; border-radius: 8px; width: 38px; height: 32px; cursor: pointer; color: var(--text); }
+
+/* ---------- Carpeta local ---------- */
+.folder { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+.folder code { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; color: var(--ink); font-size: 12px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.folder .btn { padding: 4px 10px; font-size: 13px; }
+#dirDlg { border: 1px solid var(--line); border-radius: var(--radius); padding: 0; width: min(640px, calc(100vw - 32px)); max-height: min(80vh, 720px); background: var(--surface); color: var(--ink); box-shadow: 0 24px 60px -20px rgb(0 0 0 / .45); }
+#dirDlg[open] { display: flex; flex-direction: column; }
+#dirDlg::backdrop { background: rgb(10 14 20 / .45); }
+.dir-path { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+.dir-path code { flex: 1; min-width: 0; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dir-path .btn { padding: 4px 10px; font-size: 13px; }
+.dir-acc { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+.dir-acc button { border: 1px solid var(--line); background: var(--bg); border-radius: 99px; padding: 3px 10px; font-size: 12px; cursor: pointer; }
+.dir-acc button:hover { border-color: var(--accent); }
+.dir-foot { display: flex; flex-direction: column; gap: 10px; padding: 12px 16px; border-top: 1px solid var(--line); font-size: 13px; }
+.dir-foot .row-btns { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.dir-foot form { display: flex; gap: 8px; }
+.dir-foot input[type=text] { flex: 1; font: inherit; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); }
+.dir-foot label { display: flex; gap: 8px; align-items: center; color: var(--muted); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.ver { font-size: 11px; border: 1px solid var(--line); border-radius: 99px; padding: 0 7px; margin-left: 4px; vertical-align: 1px; font-variant-numeric: tabular-nums; }
+.ver:empty { display: none; }
+
+/* ---------- Synology (estilos) ---------- */
+#nasDlg { border: 1px solid var(--line); border-radius: var(--radius); padding: 0; width: min(640px, calc(100vw - 32px)); max-height: min(78vh, 720px); background: var(--surface); color: var(--ink); box-shadow: 0 24px 60px -20px rgb(0 0 0 / .45); }
+#nasDlg[open] { display: flex; flex-direction: column; }
+#nasDlg::backdrop { background: rgb(10 14 20 / .45); }
+.nas-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.nas-head h2 { margin: 0; flex: 1; font-size: 16px; font-weight: 600; }
+.nas-head small { color: var(--muted); font-size: 12px; }
+.nas-x { background: none; border: 0; cursor: pointer; font-size: 20px; line-height: 1; color: var(--muted); padding: 4px 8px; border-radius: 6px; }
+.nas-x:hover { color: var(--ink); background: var(--bg); }
+.crumbs { display: flex; flex-wrap: wrap; gap: 2px; padding: 10px 16px; border-bottom: 1px solid var(--line); font-size: 13px; }
+.crumbs button { background: none; border: 0; padding: 2px 6px; border-radius: 5px; cursor: pointer; color: var(--accent); }
+.crumbs button:last-child { color: var(--ink); font-weight: 600; cursor: default; }
+.crumbs span { color: var(--muted); }
+.nas-body { overflow: auto; flex: 1; min-height: 160px; }
+.nas-list { list-style: none; margin: 0; padding: 6px; }
+.nas-list button { width: 100%; display: flex; align-items: center; gap: 12px; padding: 9px 10px; background: none; border: 0; border-radius: 7px; cursor: pointer; text-align: left; }
+.nas-list button:hover { background: var(--bg); }
+.nas-list svg { width: 18px; height: 18px; flex: none; fill: none; stroke: var(--muted); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.nas-list .dir svg { stroke: var(--accent); }
+.nas-list .n { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nas-list .s { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.nas-list .ok { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 99px; padding: 0 7px; }
+.nas-msg { padding: 28px 20px; color: var(--muted); text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center; }
+.nas-msg.err { color: var(--danger); }
+.nas-msg code { background: var(--bg); padding: 1px 5px; border-radius: 4px; color: var(--ink); font-size: 12px; }
+.otp { display: flex; flex-direction: column; gap: 10px; align-items: center; padding: 24px 20px; }
+.otp input { font: inherit; font-size: 22px; letter-spacing: .3em; text-align: center; width: 9ch; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); }
+.login { display: flex; flex-direction: column; gap: 12px; padding: 22px 24px; max-width: 380px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+.login label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+.login input { font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); }
+.login input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: var(--accent); }
+.login .hint { font-size: 12px; color: var(--muted); }
+.login .err { color: var(--danger); font-size: 13px; }
+.login .btn { justify-content: center; }
+.nas-out { background: none; border: 0; font: inherit; font-size: 12px; color: var(--muted); cursor: pointer; padding: 4px 6px; border-radius: 6px; }
+.nas-out:hover { color: var(--ink); background: var(--bg); }
+.nas-foot { padding: 10px 16px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 10px; min-height: 20px; }
+.nas-foot .bar { max-width: 200px; height: 4px; }
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 9px 16px; border-radius: 8px; font-size: 13px; z-index: 50; max-width: calc(100vw - 32px); }
+
+@media (max-width: 560px) {
+  #viewer { inset: 8px 16px; }
+  .turn { width: 28%; opacity: 0; }
+  .ib .lbl { display: none; }
+  #seek { width: 34%; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+
+<main id="library">
+  <header class="lib-head">
+    <div class="brand">
+      <h1>Atril</h1>
+      <p>Tu biblioteca EPUB, en el navegador y en tu PC. <span class="ver" id="appVer"></span></p>
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="openBtn" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        Abrir EPUB
+      </button>
+      <button class="btn" id="nasBtn" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8"/><circle cx="12" cy="16.5" r="1.2"/></svg>
+        Synology
+      </button>
+      <input type="file" id="fileInput" accept=".epub,application/epub+zip" multiple hidden>
+    </div>
+  </header>
+
+  <div class="drop" id="drop">Arrastra archivos .epub aquí o usa <b>Abrir EPUB</b>. <span id="dropWhere">Se guardan en este navegador</span> para que los retomes donde quedaste.</div>
+
+  <div class="folder" id="folderBar" hidden>
+    <span>Carpeta de libros</span>
+    <code id="locPath" title=""></code>
+    <button class="btn" id="locBtn" type="button">Cambiar carpeta</button>
+  </div>
+
+  <section style="display:flex;flex-direction:column;gap:14px">
+    <div class="shelf-label" id="shelfLabel">Biblioteca</div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <p class="note" id="storageNote" hidden>Este navegador no permite guardar datos, así que los libros abiertos no se conservarán al cerrar la página.</p>
+</main>
+
+<section id="reader" hidden data-mode="claro" aria-label="Lector">
+  <div class="rbar">
+    <button class="ib" id="backBtn" type="button" title="Volver a la biblioteca">
+      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg><span class="lbl">Biblioteca</span>
+    </button>
+    <button class="ib" id="tocBtn" type="button" title="Índice" aria-expanded="false">
+      <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span class="lbl">Índice</span>
+    </button>
+    <div class="title" id="rTitle"></div>
+    <button class="ib" id="setBtn" type="button" title="Apariencia" aria-expanded="false">
+      <svg viewBox="0 0 24 24"><path d="M4 19l5-14h2l5 14M6.5 13h7"/><path d="M17 19l2.5-7 2.5 7M18 17h3"/></svg><span class="lbl">Apariencia</span>
+    </button>
+  </div>
+  <div class="stage">
+    <div id="viewer"></div>
+    <div class="loading" id="loading">Abriendo libro…</div>
+    <button class="turn prev" id="prevBtn" type="button" aria-label="Página anterior"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <button class="turn next" id="nextBtn" type="button" aria-label="Página siguiente"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+    <nav class="panel" id="toc" hidden aria-label="Índice"></nav>
+    <div class="panel" id="settings" hidden>
+      <div class="row"><span>Fondo</span>
+        <div class="seg" id="modeSeg">
+          <button type="button" data-v="claro"><i class="sw" style="background:#fbfbfa"></i>Claro</button>
+          <button type="button" data-v="sepia"><i class="sw" style="background:#f3ead8"></i>Sepia</button>
+          <button type="button" data-v="noche"><i class="sw" style="background:#15181d"></i>Noche</button>
+        </div>
+      </div>
+      <div class="row"><span>Letra</span>
+        <div class="seg" id="fontSeg">
+          <button type="button" data-v="original">Original</button>
+          <button type="button" data-v="serif">Serif</button>
+          <button type="button" data-v="sans">Sans</button>
+        </div>
+      </div>
+      <div class="row"><span>Tamaño</span>
+        <div class="size">
+          <button type="button" id="smaller" aria-label="Reducir letra">A−</button>
+          <output id="sizeOut">100 %</output>
+          <button type="button" id="bigger" aria-label="Aumentar letra">A+</button>
+        </div>
+      </div>
+      <div class="row"><span>Diseño</span>
+        <div class="seg" id="flowSeg">
+          <button type="button" data-v="paginated">Páginas</button>
+          <button type="button" data-v="scrolled-doc">Desplazar</button>
+        </div>
+      </div>
+      <div class="row"><span>Interlineado</span>
+        <div class="seg" id="lhSeg">
+          <button type="button" data-v="1.4">Compacto</button>
+          <button type="button" data-v="1.6">Normal</button>
+          <button type="button" data-v="1.85">Amplio</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="rfoot">
+    <span class="chap" id="chap"></span>
+    <input type="range" id="seek" min="0" max="1000" value="0" aria-label="Posición en el libro" disabled>
+    <span id="pct">—</span>
+  </div>
+</section>
+
+<dialog id="dirDlg" aria-labelledby="dirTitle">
+  <div class="nas-head">
+    <h2 id="dirTitle">Carpeta de libros</h2>
+    <button class="nas-x" id="dirClose" type="button" aria-label="Cerrar">×</button>
+  </div>
+  <div class="dir-acc" id="dirAcc"></div>
+  <div class="dir-path"><button class="btn" id="dirUp" type="button">↑ Subir</button><code id="dirPath"></code></div>
+  <div class="nas-body" id="dirBody"></div>
+  <div class="dir-foot">
+    <form id="dirNewForm" hidden><input type="text" id="dirNewName" placeholder="Nombre de la nueva carpeta" aria-label="Nombre de la nueva carpeta"><button class="btn" type="submit">Crear</button></form>
+    <label><input type="checkbox" id="dirMove" checked> Mover los libros de la carpeta actual a la nueva</label>
+    <div class="row-btns">
+      <button class="btn" id="dirNew" type="button">Nueva carpeta</button>
+      <button class="btn primary" id="dirUse" type="button">Usar esta carpeta</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="nasDlg" aria-labelledby="nasTitle">
+  <div class="nas-head">
+    <h2 id="nasTitle">Libros en tu Synology</h2>
+    <small id="nasVia"></small>
+    <button class="nas-out" id="nasOut" type="button" hidden>Cerrar sesión</button>
+    <button class="nas-x" id="nasClose" type="button" aria-label="Cerrar">×</button>
+  </div>
+  <nav class="crumbs" id="nasCrumbs" aria-label="Carpeta actual" hidden></nav>
+  <div class="nas-body" id="nasBody"></div>
+  <div class="nas-foot" id="nasFoot"></div>
+</dialog>
+
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script src="lib/jszip.min.js"></script>
+<script src="lib/epub.min.js"></script>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const SAMPLE_ID = "muestra-atril-v1";
+
+  /* ---------- Safe storage ---------- */
+  const ls = {
+    get(k, d) { try { const v = localStorage.getItem("atril:" + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem("atril:" + k, JSON.stringify(v)); } catch {} },
+    del(k) { try { localStorage.removeItem("atril:" + k); } catch {} }
+  };
+  let dbp = null;
+  function db() {
+    if (dbp) return dbp;
+    dbp = new Promise((res, rej) => {
+      try {
+        const r = indexedDB.open("atril", 1);
+        r.onupgradeneeded = () => r.result.createObjectStore("books", { keyPath: "id" });
+        r.onsuccess = () => res(r.result);
+        r.onerror = () => rej(r.error);
+      } catch (e) { rej(e); }
+    });
+    return dbp;
+  }
+  async function tx(mode, fn) {
+    const d = await db();
+    return new Promise((res, rej) => {
+      const t = d.transaction("books", mode); const s = t.objectStore("books");
+      const out = fn(s);
+      t.oncomplete = () => res(out && out.result);
+      t.onerror = () => rej(t.error);
+    });
+  }
+  const memBooks = new Map(); // fallback when IndexedDB is unavailable
+  let persistent = true;
+  async function putBook(b) { memBooks.set(b.id, b); if (!persistent) return; try { await tx("readwrite", s => s.put(b)); } catch { persistent = false; $("storageNote").hidden = false; } }
+  async function allBooks() {
+    if (persistent) { try { const list = await tx("readonly", s => s.getAll()); list.forEach(b => memBooks.set(b.id, b)); } catch { persistent = false; $("storageNote").hidden = false; } }
+    return [...memBooks.values()].sort((a, b) => (b.lastRead || b.added) - (a.lastRead || a.added));
+  }
+  async function delBook(id) { memBooks.delete(id); ls.del("pos:" + id); if (persistent) { try { await tx("readwrite", s => s.delete(id)); } catch {} } }
+
+  function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(() => t.hidden = true, 2600); }
+
+  /* ---------- Sample book (generated so the library never opens empty) ---------- */
+  async function makeSample() {
+    const z = new JSZip();
+    z.file("mimetype", "application/epub+zip", { compression: "STORE" });
+    z.file("META-INF/container.xml", `<?xml version="1.0"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>`);
+    const ch = [
+      ["Bienvenida", `<p>Este es un libro de ejemplo creado por Atril para que veas cómo funciona el lector. Puedes eliminarlo de la biblioteca cuando quieras.</p><p>Pasa las páginas con las flechas del teclado, con los botones a los lados o tocando los bordes de la pantalla en el teléfono. La barra inferior muestra el capítulo y el porcentaje leído; puedes arrastrarla para saltar a otra parte del libro.</p><p>Atril recuerda la última página de cada libro. Cuando vuelvas a abrirlo, seguirás justo donde quedaste.</p>`],
+      ["Apariencia", `<p>El botón <i>Apariencia</i> abre los ajustes de lectura: fondo claro, sepia o de noche; tipo de letra; tamaño; interlineado y el modo de páginas o de desplazamiento continuo.</p><p>Los ajustes se guardan para todos tus libros, así que solo tienes que elegirlos una vez.</p>`],
+      ["Un clásico para probar", `<p>Para ver cómo se ve un texto literario, aquí tienes el comienzo de una novela de dominio público:</p><blockquote><p>En un lugar de la Mancha, de cuyo nombre no quiero acordarme, no ha mucho tiempo que vivía un hidalgo de los de lanza en astillero, adarga antigua, rocín flaco y galgo corredor.</p><p style="text-align:right">— Miguel de Cervantes, <i>Don Quijote de la Mancha</i> (1605)</p></blockquote>`],
+      ["Lo que viene", `<p>Esta primera versión lee archivos EPUB que abres desde tu equipo. El siguiente paso es conectar Atril a tu Synology para navegar tus carpetas y abrir los libros directamente desde el NAS.</p>`]
+    ];
+    const xhtml = (t, body) => `<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="es"><head><title>${t}</title></head><body><h2>${t}</h2>${body}</body></html>`;
+    ch.forEach(([t, b], i) => z.file(`OEBPS/c${i + 1}.xhtml`, xhtml(t, b)));
+    z.file("OEBPS/nav.xhtml", `<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>Índice</title></head><body><nav epub:type="toc"><ol>${ch.map(([t], i) => `<li><a href="c${i + 1}.xhtml">${t}</a></li>`).join("")}</ol></nav></body></html>`);
+    z.file("OEBPS/content.opf", `<?xml version="1.0" encoding="utf-8"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="uid"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="uid">${SAMPLE_ID}</dc:identifier><dc:title>Cómo usar Atril</dc:title><dc:creator>Atril</dc:creator><dc:language>es</dc:language><meta property="dcterms:modified">2026-09-29T00:00:00Z</meta></metadata><manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>${ch.map((_, i) => `<item id="c${i + 1}" href="c${i + 1}.xhtml" media-type="application/xhtml+xml"/>`).join("")}</manifest><spine>${ch.map((_, i) => `<itemref idref="c${i + 1}"/>`).join("")}</spine></package>`);
+    return z.generateAsync({ type: "arraybuffer", mimeType: "application/epub+zip" });
+  }
+
+  /* ---------- Import ---------- */
+  async function hashId(buf) {
+    try { const h = await crypto.subtle.digest("SHA-1", buf); return [...new Uint8Array(h)].slice(0, 10).map(b => b.toString(16).padStart(2, "0")).join(""); }
+    catch { return "b" + buf.byteLength + "-" + Date.now(); }
+  }
+  async function thumb(book) {
+    try {
+      const url = await book.coverUrl(); if (!url) return null;
+      const img = new Image(); img.src = url; await img.decode();
+      const c = document.createElement("canvas"); const w = 300, h = Math.round(w * img.naturalHeight / img.naturalWidth);
+      c.width = w; c.height = Math.min(h, 480); c.getContext("2d").drawImage(img, 0, 0, w, h);
+      return c.toDataURL("image/jpeg", 0.82);
+    } catch { return null; }
+  }
+  /* ---------- Carpeta local (solo con el servidor de Atril) ----------
+     Con servidor: el archivo EPUB vive en la carpeta elegida y en IndexedDB solo queda la ficha
+     (título, autor, portada) con "archivo" = ruta relativa dentro de la carpeta.
+     Sin servidor (web pura): el EPUB completo se guarda en IndexedDB ("data"). */
+  const loc = { activa: false, carpeta: null, sincronizando: false };
+  async function apiLocal(path, opts = {}) {
+    let r;
+    try { r = await fetch("/api/local" + path, { method: opts.method, headers: { "X-Atril": "1", ...(opts.json ? { "Content-Type": "application/json" } : {}) }, body: opts.json ? JSON.stringify(opts.json) : opts.body }); }
+    catch { throw new Error("No hay conexión con el servidor de Atril. Ejecuta dotnet run."); }
+    if (r.ok) return r;
+    let j = {}; try { j = await r.json(); } catch {}
+    throw Object.assign(new Error(j.error || `Error ${r.status}`), { status: r.status });
+  }
+  async function guardarLocal(buf, nombre) {
+    return (await (await apiLocal("/libros?nombre=" + encodeURIComponent(nombre), { method: "POST", body: buf })).json()).archivo;
+  }
+  async function cargarDatos(rec) {
+    if (rec.data) return rec.data;
+    if (!rec.archivo) throw new Error("Este libro no tiene datos.");
+    try { return await (await apiLocal("/libro?archivo=" + encodeURIComponent(rec.archivo))).arrayBuffer(); }
+    catch (e) {
+      if (e.status === 404) { await quitarFicha(rec.id); throw new Error(`"${rec.title}" ya no está en tu carpeta de libros.`); }
+      throw e;
+    }
+  }
+  // Quita la ficha sin borrar el avance: si el archivo vuelve, se retoma donde ibas
+  async function quitarFicha(id) { memBooks.delete(id); if (persistent) { try { await tx("readwrite", s => s.delete(id)); } catch {} } }
+  const nombreDe = a => a.split("/").pop();
+
+  async function importBuffer(buf, fallbackName, fixedId, extra) {
+    const id = fixedId || await hashId(buf);
+    const prev = memBooks.get(id);
+    if (prev) {
+      let cambio = false;
+      if (extra && extra.nas && prev.nas !== extra.nas) { prev.nas = extra.nas; cambio = true; }
+      if (extra && extra.archivo && !prev.archivo) { prev.archivo = extra.archivo; prev.data = null; cambio = true; }
+      else if (extra && extra.archivo && prev.archivo !== extra.archivo && !(prev.copias || []).includes(extra.archivo)) {
+        prev.copias = [...(prev.copias || []), extra.archivo]; cambio = true; // mismo libro con otro nombre: no se vuelve a leer
+      }
+      if (cambio) await putBook(prev);
+      return prev;
+    }
+    const book = ePub(buf.slice(0), { replacements: "blobUrl" });
+    await book.ready.catch(() => {});
+    const md = await book.loaded.metadata;
+    let archivo = extra && extra.archivo || null;
+    if (!archivo && loc.activa && !fixedId) archivo = await guardarLocal(buf, fallbackName);
+    const rec = { id, title: md.title || fallbackName.replace(/\.epub$/i, ""), author: md.creator || "", cover: await thumb(book), added: Date.now(), sample: id === SAMPLE_ID, ...(extra || {}), archivo, data: archivo ? null : buf };
+    // Esperar a que epub.js termine de preparar los recursos antes de destruir el libro
+    await Promise.race([book.opened, new Promise(r => setTimeout(r, 10000))]).catch(() => {});
+    book.destroy();
+    await putBook(rec);
+    return rec;
+  }
+  async function importFiles(files) {
+    const list = [...files].filter(f => /\.epub$/i.test(f.name) || f.type === "application/epub+zip");
+    if (!list.length) { toast("Solo se pueden abrir archivos .epub"); return; }
+    let last;
+    for (const f of list) {
+      try { last = await importBuffer(await f.arrayBuffer(), f.name); }
+      catch (e) { console.error(e); toast(`No se pudo leer "${f.name}". Revisa que sea un EPUB válido.`); }
+    }
+    await renderLibrary();
+    if (list.length === 1 && last) openBook(last.id);
+    else if (last) toast(`${list.length} libros añadidos`);
+  }
+
+  /* ---------- Library ---------- */
+  const palettes = [["#2c5d8f", "#1d3f63"], ["#6b4c8a", "#46305e"], ["#2f6f5e", "#1f4a3e"], ["#8a4b3a", "#5e3226"], ["#4a5568", "#2d3440"], ["#7a6a2e", "#524620"]];
+  function genCover(b) {
+    let h = 0; for (const c of b.id) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+    const [a, z] = palettes[h % palettes.length];
+    return `<div class="gen" style="background:linear-gradient(160deg,${a},${z})"><b></b><span></span></div>`;
+  }
+  async function renderLibrary() {
+    const books = await allBooks();
+    const g = $("grid"); g.innerHTML = "";
+    $("shelfLabel").textContent = books.length ? `Biblioteca · ${books.length} ${books.length === 1 ? "libro" : "libros"}` : "Biblioteca";
+    if (!books.length) { g.innerHTML = `<div class="empty">Aún no hay libros. Abre tu primer EPUB.</div>`; return; }
+    for (const b of books) {
+      const pos = ls.get("pos:" + b.id, null); const pct = pos && pos.pct != null ? Math.round(pos.pct * 100) : 0;
+      const el = document.createElement("article"); el.className = "book";
+      el.innerHTML = `
+        <button class="cover" type="button" aria-label="Leer">${b.cover ? `<img alt="" src="${b.cover}">` : genCover(b)}</button>
+        <div class="meta"><span class="t"></span><span class="a"></span></div>
+        <div class="prog"><span class="bar"><i style="width:${pct}%"></i></span><span>${pos ? pct + " %" : "Nuevo"}</span></div>
+        <div style="display:flex;gap:8px;align-items:center">${b.sample ? '<span class="tag">Ejemplo</span>' : ""}${b.nas ? '<span class="tag">NAS</span>' : ""}<button class="rm" type="button">Eliminar</button></div>`;
+      el.querySelector(".t").textContent = b.title;
+      el.querySelector(".a").textContent = b.author || "Autor desconocido";
+      el.querySelector(".cover").setAttribute("aria-label", "Leer " + b.title);
+      const gen = el.querySelector(".gen"); if (gen) { gen.querySelector("b").textContent = b.title; gen.querySelector("span").textContent = b.author; }
+      el.querySelector(".cover").onclick = () => openBook(b.id);
+      const rm = el.querySelector(".rm");
+      rm.onclick = async () => {
+        if (!rm.classList.contains("confirm")) { rm.classList.add("confirm"); rm.textContent = b.archivo ? "¿Borrar el archivo? Toca otra vez" : "¿Eliminar? Toca otra vez"; setTimeout(() => { rm.classList.remove("confirm"); rm.textContent = "Eliminar"; }, 3500); return; }
+        if (b.archivo) {
+          try { for (const a of [b.archivo, ...(b.copias || [])]) await apiLocal("/libro?archivo=" + encodeURIComponent(a), { method: "DELETE" }); }
+          catch (e) { toast(e.message); return; }
+        }
+        await delBook(b.id); if (b.sample) ls.set("sampleRemoved", true); renderLibrary(); toast(b.archivo ? "Libro y archivo eliminados" : "Libro eliminado");
+      };
+      g.appendChild(el);
+    }
+  }
+
+  /* ---------- Reader ---------- */
+  const S = Object.assign({ mode: "claro", font: "original", size: 100, flow: "paginated", lh: "1.6" }, ls.get("settings", {}));
+  const fonts = { serif: '"Literata", Georgia, serif', sans: '"Instrument Sans", system-ui, sans-serif' };
+  const modeColors = { claro: ["#fbfbfa", "#1d2127", "#2c5d8f"], sepia: ["#f3ead8", "#3b2f22", "#8a4b1f"], noche: ["#15181d", "#d7dbe0", "#7fb0e3"] };
+  let book = null, rend = null, cur = null, curData = null, tocFlat = [];
+
+  function applyStyles() {
+    if (!rend) return;
+    const [bg, fg, link] = modeColors[S.mode];
+    const rules = { body: { background: bg + " !important", color: fg + " !important", "line-height": S.lh + " !important" }, "p, li, blockquote, div, span": { color: "inherit" }, a: { color: link + " !important" }, "h1,h2,h3,h4": { color: fg + " !important" } };
+    if (S.font !== "original") rules["body, p, li, div, span, blockquote, h1, h2, h3, h4"] = { "font-family": fonts[S.font] + " !important" };
+    rend.themes.register("atril", rules); rend.themes.select("atril");
+    rend.themes.fontSize(S.size + "%");
+  }
+  function syncControls() {
+    $("reader").dataset.mode = S.mode;
+    for (const [seg, key] of [["modeSeg", "mode"], ["fontSeg", "font"], ["flowSeg", "flow"], ["lhSeg", "lh"]])
+      $(seg).querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === String(S[key]))));
+    $("sizeOut").textContent = S.size + " %";
+    const paged = S.flow === "paginated"; $("prevBtn").hidden = !paged; $("nextBtn").hidden = !paged;
+  }
+  function saveSettings() { ls.set("settings", S); syncControls(); applyStyles(); }
+
+  function flattenToc(items, depth = 0, out = []) { for (const it of items) { out.push({ label: it.label.trim(), href: it.href, depth }); if (it.subitems && it.subitems.length) flattenToc(it.subitems, depth + 1, out); } return out; }
+  function chapterFor(href) {
+    if (!href) return "";
+    const base = href.split("#")[0]; let hit = null;
+    for (const t of tocFlat) if (t.href.split("#")[0].endsWith(base) || base.endsWith(t.href.split("#")[0])) { hit = t; if (!t.href.includes("#")) break; }
+    return hit ? hit.label : "";
+  }
+
+  async function openBook(id) {
+    const rec = memBooks.get(id); if (!rec) return;
+    cur = rec; rec.lastRead = Date.now(); putBook(rec);
+    $("library").hidden = true; $("reader").hidden = false; $("loading").hidden = false;
+    $("rTitle").textContent = rec.title; $("chap").textContent = ""; $("pct").textContent = "—"; $("seek").disabled = true;
+    closePanels(); syncControls();
+    try { curData = await cargarDatos(rec); }
+    catch (e) { toast(e.message); await closeReader(); return; }
+    await mountRendition();
+  }
+  async function mountRendition(targetCfi) {
+    if (rend) { rend.destroy(); rend = null; }
+    if (book) { book.destroy(); book = null; }
+    $("viewer").innerHTML = "";
+    book = ePub(curData.slice(0), { replacements: "blobUrl" });
+    rend = book.renderTo("viewer", { width: "100%", height: "100%", flow: S.flow, spread: "auto", manager: S.flow === "paginated" ? "default" : "continuous", allowScriptedContent: false });
+    rend.hooks.content.register(c => { try { c.addStylesheet("https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Instrument+Sans:wght@400;600&display=swap"); } catch {} });
+    applyStyles();
+    const saved = ls.get("pos:" + cur.id, null);
+    try { await rend.display(targetCfi || (saved && saved.cfi) || undefined); }
+    catch (e1) {
+      try { await rend.display(); }
+      catch (e2) { console.error(e2); $("loading").hidden = true; toast("No se pudo mostrar este libro."); return; }
+    }
+    $("loading").hidden = true;
+    const nav = await book.loaded.navigation; tocFlat = flattenToc(nav.toc || []); buildToc();
+    rend.on("relocated", onRelocated);
+    rend.on("keyup", onKey);
+    rend.on("click", closePanels);
+    const thisBook = book;
+    book.ready.then(() => book.locations.generate(1200)).then(() => { if (book !== thisBook) return; $("seek").disabled = false; if (rend.location) onRelocated(rend.location); }).catch(() => {});
+  }
+  function onRelocated(loc) {
+    if (!loc || !loc.start) return;
+    const cfi = loc.start.cfi; let pct = null;
+    if (book.locations.length()) pct = book.locations.percentageFromCfi(cfi);
+    if (loc.atEnd) pct = 1;
+    $("chap").textContent = chapterFor(loc.start.href);
+    if (pct != null) { $("pct").textContent = Math.round(pct * 100) + " %"; if (!seeking) $("seek").value = Math.round(pct * 1000); }
+    const prev = ls.get("pos:" + cur.id, {}) || {};
+    ls.set("pos:" + cur.id, { cfi, pct: pct != null ? pct : prev.pct ?? 0, at: Date.now() });
+  }
+  function buildToc() {
+    const n = $("toc"); n.innerHTML = "";
+    if (!tocFlat.length) { n.innerHTML = '<div style="padding:10px;color:var(--rmuted);font-size:14px">Este libro no trae índice.</div>'; return; }
+    for (const t of tocFlat) {
+      const a = document.createElement("a"); a.href = "#"; a.textContent = t.label; if (t.depth) a.className = "sub";
+      a.onclick = (e) => { e.preventDefault(); rend.display(t.href); closePanels(); };
+      n.appendChild(a);
+    }
+  }
+  function closePanels() { for (const [p, b] of [["toc", "tocBtn"], ["settings", "setBtn"]]) { $(p).hidden = true; $(b).setAttribute("aria-expanded", "false"); } }
+  function toggle(p, b) { const open = $(p).hidden; closePanels(); $(p).hidden = !open; $(b).setAttribute("aria-expanded", String(open)); }
+  function onKey(e) {
+    if ($("reader").hidden) return;
+    if (e.key === "ArrowRight" || e.key === "PageDown") rend && rend.manager && rend.next();
+    else if (e.key === "ArrowLeft" || e.key === "PageUp") rend && rend.manager && rend.prev();
+    else if (e.key === "Escape") { if (!$("toc").hidden || !$("settings").hidden) closePanels(); else closeReader(); }
+  }
+  async function closeReader() {
+    if (rend) { rend.destroy(); rend = null; } if (book) { book.destroy(); book = null; }
+    curData = null;
+    $("reader").hidden = true; $("library").hidden = false; await renderLibrary();
+  }
+
+  /* ---------- Wiring ---------- */
+  $("openBtn").onclick = () => $("fileInput").click();
+  $("fileInput").onchange = (e) => { importFiles(e.target.files); e.target.value = ""; };
+  const drop = $("drop");
+  ["dragenter", "dragover"].forEach(t => document.addEventListener(t, e => { if ($("library").hidden) return; e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave", "drop"].forEach(t => document.addEventListener(t, e => { e.preventDefault(); if (t === "dragleave" && e.relatedTarget) return; drop.classList.remove("over"); }));
+  document.addEventListener("drop", e => { if (!$("library").hidden && e.dataTransfer && e.dataTransfer.files.length) importFiles(e.dataTransfer.files); });
+
+  $("backBtn").onclick = closeReader;
+  $("tocBtn").onclick = () => toggle("toc", "tocBtn");
+  $("setBtn").onclick = () => toggle("settings", "setBtn");
+  $("prevBtn").onclick = () => rend && rend.manager && rend.prev();
+  $("nextBtn").onclick = () => rend && rend.manager && rend.next();
+  document.addEventListener("keyup", onKey);
+  for (const [seg, key] of [["modeSeg", "mode"], ["fontSeg", "font"], ["lhSeg", "lh"]])
+    $(seg).addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; S[key] = b.dataset.v; saveSettings(); });
+  $("flowSeg").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b || b.dataset.v === S.flow) return;
+    S.flow = b.dataset.v; const cfi = rend && rend.location && rend.location.start.cfi; saveSettings(); $("loading").hidden = false; mountRendition(cfi);
+  });
+  $("smaller").onclick = () => { S.size = Math.max(70, S.size - 10); saveSettings(); };
+  $("bigger").onclick = () => { S.size = Math.min(200, S.size + 10); saveSettings(); };
+  let seeking = false;
+  $("seek").addEventListener("input", () => { seeking = true; $("pct").textContent = Math.round($("seek").value / 10) + " %"; });
+  $("seek").addEventListener("change", () => { seeking = false; if (book && book.locations.length()) rend.display(book.locations.cfiFromPercentage($("seek").value / 1000)); });
+
+  /* ---------- Synology ---------- */
+  // El navegador no habla directo con el NAS: pasa por el servidor de Atril (/api/synology),
+  // que resuelve QuickConnect, guarda la sesión y entrega los archivos.
+  const nas = { ruta: null, raiz: "/", ocupado: false };
+  const ico = {
+    dir: '<svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
+    book: '<svg viewBox="0 0 24 24"><path d="M5 4h10a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h10"/></svg>'
+  };
+  async function api(path, opts = {}) {
+    let r;
+    try { r = await fetch("/api/synology" + path, { ...opts, headers: { "X-Atril": "1", ...(opts.body ? { "Content-Type": "application/json" } : {}) } }); }
+    catch { throw Object.assign(new Error("No hay conexión con el servidor de Atril. Ejecuta dotnet run."), { sinServidor: true }); }
+    if (r.ok) return r;
+    let j = {}; try { j = await r.json(); } catch {}
+    if (r.status === 404) j.error = "Este servidor de Atril no tiene la conexión a Synology. Ejecuta la versión nueva con dotnet run.";
+    throw Object.assign(new Error(j.error || `Error ${r.status}`), { requiereOtp: !!j.requiereOtp, requiereLogin: !!j.requiereLogin });
+  }
+  const fmtSize = n => n >= 1048576 ? (n / 1048576).toFixed(1).replace(".", ",") + " MB" : Math.max(1, Math.round(n / 1024)) + " KB";
+  function nasMsg(html, err) { $("nasCrumbs").hidden = true; $("nasBody").innerHTML = `<div class="nas-msg${err ? " err" : ""}">${html}</div>`; }
+  function nasFoot(html) { $("nasFoot").innerHTML = html || ""; }
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  // Usuario y contraseña se piden aquí. La contraseña solo viaja al servidor de Atril (en tu equipo),
+  // que la guarda en memoria mientras está encendido. En el navegador solo se recuerdan el ID y el usuario.
+  let pendiente = null; // datos del formulario mientras se espera el código 2FA
+  async function nasAbrir() {
+    $("nasDlg").showModal(); nasFoot("");
+    if (nas.ruta && nas.conectado) return nasListar(nas.ruta);
+    nasMsg("Conectando…");
+    try {
+      const st = await (await api("/estado")).json();
+      nasEstado(st);
+      if (st.conectado) await nasListar(st.raiz); else nasLogin(st);
+    } catch (e) { nasError(e); }
+  }
+  function nasEstado(st) {
+    nas.conectado = st.conectado; nas.raiz = st.raiz; nas.st = st;
+    $("nasOut").hidden = !st.conectado;
+    $("nasVia").textContent = st.conectado ? `${st.usuario} · ${st.via === "QuickConnect" ? "QuickConnect" : "conexión directa"}` : "";
+    if (!st.conectado) nas.ruta = null;
+  }
+  function nasLogin(st, error) {
+    st = st || nas.st || {};
+    $("nasCrumbs").hidden = true; nasFoot("");
+    const qc = ls.get("nasQc", "") || st.quickConnectId || "", us = ls.get("nasUser", "");
+    $("nasBody").innerHTML = `<form class="login" id="loginForm" autocomplete="on">
+      ${st.direccionFija ? "" : `<label>ID de QuickConnect<input id="lgQc" name="quickconnect" required autocapitalize="off" spellcheck="false" placeholder="minas"><span class="hint">Lo que va antes de .quickconnect.to</span></label>`}
+      <label>Usuario de DSM<input id="lgUser" name="username" autocomplete="username" required autocapitalize="off" spellcheck="false"></label>
+      <label>Contraseña<input id="lgPass" name="password" type="password" autocomplete="current-password" required></label>
+      ${error ? `<div class="err" role="alert"></div>` : ""}
+      <button class="btn primary" type="submit">Entrar</button>
+      <span class="hint">La contraseña no se guarda en el navegador. Se pedirá de nuevo cuando reinicies Atril.</span>
+    </form>`;
+    if ($("lgQc")) $("lgQc").value = qc;
+    $("lgUser").value = us;
+    if (error) $("loginForm").querySelector(".err").textContent = error;
+    (($("lgQc") && !qc) ? $("lgQc") : !us ? $("lgUser") : $("lgPass")).focus();
+    $("loginForm").onsubmit = ev => {
+      ev.preventDefault();
+      const d = { quickConnectId: $("lgQc") ? $("lgQc").value.trim() : null, usuario: $("lgUser").value.trim(), clave: $("lgPass").value };
+      ls.set("nasUser", d.usuario); if (d.quickConnectId) ls.set("nasQc", d.quickConnectId);
+      nasConectar(d);
+    };
+  }
+  async function nasConectar(datos, otp) {
+    pendiente = datos;
+    nasMsg(otp ? "Verificando código…" : (nas.st && nas.st.direccionFija ? "Conectando con el NAS…" : "Buscando tu NAS por QuickConnect… (puede tardar unos segundos)"));
+    try {
+      const st = await (await api("/conectar", { method: "POST", body: JSON.stringify({ ...datos, otp: otp || null }) })).json();
+      pendiente = null; nasEstado(st); await nasListar(st.raiz);
+    } catch (e) { nasError(e); }
+  }
+  function nasError(e) {
+    if (e.requiereLogin) { pendiente = null; nasEstado({ ...(nas.st || {}), conectado: false }); return nasLogin(null, e.message); }
+    if (e.requiereOtp && pendiente) {
+      $("nasCrumbs").hidden = true;
+      $("nasBody").innerHTML = `<form class="otp" id="otpForm"><div></div>
+        <input id="otpIn" inputmode="numeric" autocomplete="one-time-code" maxlength="8" aria-label="Código de verificación" required>
+        <button class="btn primary" type="submit">Entrar</button>
+        <div class="note">Atril recordará este equipo y no volverá a pedir el código.</div></form>`;
+      $("otpForm").querySelector("div").textContent = e.message;
+      $("otpIn").focus();
+      $("otpForm").onsubmit = ev => { ev.preventDefault(); nasConectar(pendiente, $("otpIn").value); };
+      return;
+    }
+    if (e.requiereOtp) return nasLogin(null, e.message);
+    nasMsg(`${esc(e.message)}<button class="btn" type="button" id="nasRetry">Reintentar</button>`, true);
+    $("nasRetry").onclick = () => { nas.ruta = null; nasAbrir(); };
+  }
+  function nasCrumbs(ruta) {
+    const c = $("nasCrumbs"); c.hidden = false; c.innerHTML = "";
+    const raizPartes = nas.raiz.split("/").filter(Boolean), partes = ruta.split("/").filter(Boolean);
+    const inicio = Math.max(raizPartes.length, 0);
+    const pasos = [{ label: nas.raiz === "/" ? "NAS" : raizPartes.at(-1), ruta: nas.raiz }];
+    for (let i = inicio; i < partes.length; i++) pasos.push({ label: partes[i], ruta: "/" + partes.slice(0, i + 1).join("/") });
+    pasos.forEach((p, i) => {
+      if (i) c.insertAdjacentHTML("beforeend", "<span>/</span>");
+      const b = document.createElement("button"); b.type = "button"; b.textContent = p.label;
+      if (i < pasos.length - 1) b.onclick = () => nasListar(p.ruta);
+      c.appendChild(b);
+    });
+  }
+  async function nasListar(ruta) {
+    if (nas.ocupado) return;
+    nasCrumbs(ruta); $("nasBody").innerHTML = '<div class="nas-msg">Cargando…</div>';
+    try {
+      const d = await (await api("/carpetas?ruta=" + encodeURIComponent(ruta))).json();
+      nas.ruta = d.ruta; nas.raiz = d.raiz;
+      const locales = new Set((await allBooks()).map(b => b.nas).filter(Boolean));
+      if (!d.entradas.length) { $("nasBody").innerHTML = '<div class="nas-msg">No hay libros EPUB ni carpetas aquí.</div>'; return; }
+      const ul = document.createElement("ul"); ul.className = "nas-list";
+      for (const e of d.entradas) {
+        const li = document.createElement("li"), b = document.createElement("button"); b.type = "button";
+        b.className = e.esCarpeta ? "dir" : "file";
+        b.innerHTML = `${e.esCarpeta ? ico.dir : ico.book}<span class="n"></span>${!e.esCarpeta && locales.has(e.ruta) ? '<span class="ok">En la biblioteca</span>' : ""}<span class="s">${e.esCarpeta ? "" : fmtSize(e.tamano)}</span>`;
+        b.querySelector(".n").textContent = e.nombre; b.title = e.nombre;
+        b.onclick = () => e.esCarpeta ? nasListar(e.ruta) : nasDescargar(e);
+        li.appendChild(b); ul.appendChild(li);
+      }
+      $("nasBody").innerHTML = ""; $("nasBody").appendChild(ul);
+      const nl = d.entradas.filter(e => !e.esCarpeta).length, nc = d.entradas.length - nl;
+      nasFoot(`${nl} ${nl === 1 ? "libro" : "libros"} · ${nc} ${nc === 1 ? "carpeta" : "carpetas"}`);
+    } catch (e) { nasError(e); }
+  }
+  async function nasDescargar(e) {
+    const ya = (await allBooks()).find(b => b.nas === e.ruta);
+    if (ya) { $("nasDlg").close(); return openBook(ya.id); }
+    if (nas.ocupado) return; nas.ocupado = true;
+    const pie = n => nasFoot(`<span>Descargando “${esc(e.nombre)}”</span><span class="bar"><i style="width:${n}%"></i></span><span>${n} %</span>`);
+    pie(0);
+    try {
+      const r = await api("/libro?ruta=" + encodeURIComponent(e.ruta) + "&tamano=" + e.tamano);
+      const archivo = r.headers.get("X-Atril-Archivo") ? decodeURIComponent(r.headers.get("X-Atril-Archivo")) : null;
+      const total = +r.headers.get("Content-Length") || e.tamano || 0;
+      const lector = r.body.getReader(), trozos = []; let recibido = 0;
+      for (;;) {
+        const { done, value } = await lector.read(); if (done) break;
+        trozos.push(value); recibido += value.length;
+        if (total) pie(Math.min(100, Math.round(recibido / total * 100)));
+      }
+      const buf = new Uint8Array(recibido); let o = 0; for (const t of trozos) { buf.set(t, o); o += t.length; }
+      nasFoot("Preparando el libro…");
+      const rec = await importBuffer(buf.buffer, e.nombre, null, { nas: e.ruta, ...(archivo ? { archivo } : {}) });
+      nas.ocupado = false; $("nasDlg").close();
+      await renderLibrary(); openBook(rec.id);
+    } catch (err) { nas.ocupado = false; nasFoot(""); if (err.requiereOtp) nasError(err); else toast(err.message); }
+  }
+  $("nasBtn").onclick = nasAbrir;
+  $("nasClose").onclick = () => $("nasDlg").close();
+  $("nasOut").onclick = async () => { try { nasEstado(await (await api("/desconectar", { method: "POST" })).json()); } catch {} nasLogin(); };
+
+  /* ---------- Carpeta de libros: sincronizar y elegir ---------- */
+  function mostrarCarpeta() {
+    $("folderBar").hidden = !loc.activa;
+    $("locPath").textContent = loc.carpeta || ""; $("locPath").title = loc.carpeta || "";
+    $("dropWhere").textContent = loc.activa ? "Se guardan en tu carpeta de libros" : "Se guardan en este navegador";
+  }
+  // Pone la biblioteca al día con la carpeta: libros nuevos, libros borrados fuera de Atril
+  // y libros que antes estaban solo en el navegador (se pasan a la carpeta).
+  async function sincronizarCarpeta() {
+    if (!loc.activa || loc.sincronizando) return; loc.sincronizando = true;
+    try {
+      let cambios = false;
+      for (const b of await allBooks())
+        if (b.data && !b.archivo && !b.sample) { b.archivo = await guardarLocal(b.data, (b.title || "libro") + ".epub"); b.data = null; await putBook(b); cambios = true; }
+      const lista = await (await apiLocal("/libros")).json();
+      const enCarpeta = new Set(lista.map(a => a.archivo));
+      const fichas = await allBooks();
+      for (const b of fichas) if (b.archivo && !enCarpeta.has(b.archivo)) { await quitarFicha(b.id); cambios = true; }
+      const conocidos = new Set(fichas.filter(b => b.archivo && enCarpeta.has(b.archivo)).flatMap(b => [b.archivo, ...(b.copias || [])]));
+      const nuevos = lista.filter(a => !conocidos.has(a.archivo));
+      for (let i = 0; i < nuevos.length; i++) {
+        const a = nuevos[i];
+        if (nuevos.length > 1) toast(`Añadiendo libros de tu carpeta… ${i + 1} de ${nuevos.length}`);
+        try {
+          const buf = await (await apiLocal("/libro?archivo=" + encodeURIComponent(a.archivo))).arrayBuffer();
+          await importBuffer(buf, nombreDe(a.archivo), null, { archivo: a.archivo });
+          cambios = true;
+        } catch (e) { console.warn("No se pudo leer", a.archivo, e); }
+      }
+      if (cambios && !$("library").hidden) await renderLibrary();
+    } catch (e) { console.warn(e); }
+    finally { loc.sincronizando = false; }
+  }
+
+  const dir = { ruta: null, padre: null };
+  async function dirAbrir() {
+    $("dirNewForm").hidden = true; $("dirMove").checked = true;
+    $("dirDlg").showModal();
+    await dirIr(loc.carpeta);
+  }
+  async function dirIr(ruta) {
+    let d;
+    try { d = await (await apiLocal("/explorar" + (ruta ? "?ruta=" + encodeURIComponent(ruta) : ""))).json(); }
+    catch (e) {
+      if (ruta && ruta === loc.carpeta) return dirIr(null); // la carpeta actual aún no existe
+      toast(e.message); return;
+    }
+    dir.ruta = d.ruta; dir.padre = d.padre;
+    $("dirPath").textContent = d.ruta || "Elige un lugar"; $("dirPath").title = d.ruta || "";
+    $("dirUp").disabled = !d.ruta; $("dirUse").disabled = !d.ruta; $("dirNew").disabled = !d.ruta;
+    const acc = $("dirAcc"); acc.innerHTML = "";
+    for (const a of d.accesos) { const b = document.createElement("button"); b.type = "button"; b.textContent = a.nombre; b.title = a.ruta; b.onclick = () => dirIr(a.ruta); acc.appendChild(b); }
+    const body = $("dirBody");
+    if (!d.carpetas.length) { body.innerHTML = '<div class="nas-msg">No hay subcarpetas aquí.</div>'; return; }
+    const ul = document.createElement("ul"); ul.className = "nas-list";
+    for (const c of d.carpetas) {
+      const li = document.createElement("li"), b = document.createElement("button");
+      b.type = "button"; b.className = "dir"; b.innerHTML = `${ico.dir}<span class="n"></span>`;
+      b.querySelector(".n").textContent = c.nombre; b.title = c.ruta;
+      b.onclick = () => dirIr(c.ruta);
+      li.appendChild(b); ul.appendChild(li);
+    }
+    body.innerHTML = ""; body.appendChild(ul);
+  }
+  $("locBtn").onclick = dirAbrir;
+  $("dirClose").onclick = () => $("dirDlg").close();
+  $("dirUp").onclick = () => dirIr(dir.padre || null);
+  $("dirNew").onclick = () => { $("dirNewForm").hidden = false; $("dirNewName").value = ""; $("dirNewName").focus(); };
+  $("dirNewForm").onsubmit = async ev => {
+    ev.preventDefault();
+    const nombre = $("dirNewName").value.trim(); if (!nombre || !dir.ruta) return;
+    try { const r = await (await apiLocal("/carpeta", { method: "POST", json: { padre: dir.ruta, nombre } })).json(); $("dirNewForm").hidden = true; await dirIr(r.ruta); }
+    catch (e) { toast(e.message); }
+  };
+  $("dirUse").onclick = async () => {
+    if (!dir.ruta) return;
+    const btn = $("dirUse"); btn.disabled = true;
+    try {
+      const r = await (await apiLocal("/config", { method: "PUT", json: { carpeta: dir.ruta, mover: $("dirMove").checked } })).json();
+      loc.carpeta = r.estado.carpeta; mostrarCarpeta(); $("dirDlg").close();
+      toast(r.movidos ? `Carpeta cambiada · ${r.movidos} ${r.movidos === 1 ? "libro movido" : "libros movidos"}` : "Carpeta cambiada");
+      await sincronizarCarpeta(); await renderLibrary();
+    } catch (e) { toast(e.message); }
+    finally { btn.disabled = false; }
+  };
+
+  /* ---------- Versión ---------- */
+  fetch("/api/salud").then(r => r.ok ? r.json() : null).then(j => { if (j && j.version) $("appVer").textContent = "v" + j.version; }).catch(() => {});
+
+  /* ---------- Boot ---------- */
+  (async () => {
+    await allBooks();
+    try { const c = await (await apiLocal("/config")).json(); loc.activa = true; loc.carpeta = c.carpeta; } catch {}
+    mostrarCarpeta();
+    if (!memBooks.has(SAMPLE_ID) && !ls.get("sampleRemoved", false)) {
+      try { await importBuffer(await makeSample(), "Cómo usar Atril.epub", SAMPLE_ID); } catch (e) { console.error(e); }
+    }
+    await renderLibrary();
+    await sincronizarCarpeta();
+  })();
+})();
+</script>
+<script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
+</body>
+</html>
