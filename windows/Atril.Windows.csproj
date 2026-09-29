@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Atril para Windows: ventana con WebView2 que se publica en la Microsoft Store (MSIX).
-       Reutiliza el servidor y la app web del proyecto principal (archivos enlazados, no copiados).
-       La versión viene de ../Directory.Build.props -->
+  <!-- Atril for Windows: a WebView2 window published on the Microsoft Store (MSIX).
+       Reuses the server and web app of the main project (linked files, not copies).
+       The version comes from ../Directory.Build.props -->
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
@@ -16,7 +16,7 @@
     <ApplicationIcon>Assets\atril.ico</ApplicationIcon>
     <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
-    <SatelliteResourceLanguages>es;en</SatelliteResourceLanguages>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,16 +24,16 @@
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2210.55" />
   </ItemGroup>
 
-  <!-- Código y app web compartidos con la versión para navegador -->
+  <!-- Code and web app shared with the browser version -->
   <ItemGroup>
-    <Compile Include="..\AtrilServidor.cs" Link="Compartido\AtrilServidor.cs" />
-    <Compile Include="..\Synology\*.cs" LinkBase="Compartido\Synology" />
-    <Compile Include="..\Local\*.cs" LinkBase="Compartido\Local" />
+    <Compile Include="..\AtrilServer.cs" Link="Shared\AtrilServer.cs" />
+    <Compile Include="..\Synology\*.cs" LinkBase="Shared\Synology" />
+    <Compile Include="..\Local\*.cs" LinkBase="Shared\Local" />
     <Content Include="..\wwwroot\**" LinkBase="wwwroot" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\appsettings.json" Link="appsettings.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <!-- Nada del empaquetado MSIX se compila -->
+  <!-- Nothing in the MSIX packaging folder is compiled -->
   <ItemGroup>
     <None Remove="msix\**" />
   </ItemGroup>

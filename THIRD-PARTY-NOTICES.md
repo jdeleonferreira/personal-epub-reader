@@ -1,14 +1,14 @@
-# Componentes de terceros
+# Third-party components
 
-Atril incluye estos componentes (en `wwwroot/lib/` y, en la app de Windows, como paquete NuGet). Sus licencias permiten distribuirlos,
-también en aplicaciones comerciales, siempre que se conserven estos avisos.
+Atril includes these components (in `wwwroot/lib/` and, in the Windows app, as a NuGet package). Their licenses
+allow redistributing them, including in commercial apps, as long as these notices are kept.
 
-| Componente | Uso | Licencia |
+| Component | Use | License |
 |---|---|---|
-| [epub.js](https://github.com/futurepress/epub.js) 0.3.x | Interpretar y mostrar los EPUB | BSD 2-Clause |
-| [localForage](https://github.com/localForage/localForage) (incluido en epub.js) | Almacenamiento interno de epub.js | Apache 2.0 |
-| [JSZip](https://github.com/Stuk/jszip) 3.10.1 | Abrir el ZIP del EPUB | MIT (o GPLv3, a elección; Atril usa MIT) |
-| [pako](https://github.com/nodeca/pako) (incluido en JSZip) | Descompresión | MIT |
-| [Microsoft.Web.WebView2](https://www.nuget.org/packages/Microsoft.Web.WebView2) (solo app de Windows) | Mostrar la app en una ventana | Licencia del SDK de WebView2 (BSD 3-Clause) |
+| [epub.js](https://github.com/futurepress/epub.js) 0.3.x | Parse and display EPUB books | BSD 2-Clause |
+| [localForage](https://github.com/localForage/localForage) (bundled in epub.js) | epub.js internal storage | Apache 2.0 |
+| [JSZip](https://github.com/Stuk/jszip) 3.10.1 | Open the EPUB ZIP container | MIT (or GPLv3 at your choice; Atril uses MIT) |
+| [pako](https://github.com/nodeca/pako) (bundled in JSZip) | Decompression | MIT |
+| [Microsoft.Web.WebView2](https://www.nuget.org/packages/Microsoft.Web.WebView2) (Windows app only) | Show the app in a window | WebView2 SDK license (BSD 3-Clause) |
 
-Las fuentes Literata e Instrument Sans se cargan desde Google Fonts (SIL Open Font License 1.1).
+The Literata and Instrument Sans fonts are loaded from Google Fonts (SIL Open Font License 1.1).

@@ -1,4 +1,4 @@
-// Guarda la app para que abra sin conexión. Los libros viven en la carpeta local (o en IndexedDB sin servidor).
+// Caches the app so it opens offline. Books live in the local folder (or in IndexedDB without a server).
 const CACHE = "atril-1.1.0";
 const SHELL = ["./", "index.html", "lib/jszip.min.js", "lib/epub.min.js", "manifest.webmanifest", "icon-192.png", "icon-512.png", "icon.svg"];
 
@@ -9,7 +9,7 @@ self.addEventListener("activate", e => e.waitUntil(
 self.addEventListener("fetch", e => {
   const req = e.request;
   if (req.method !== "GET" || new URL(req.url).pathname.startsWith("/api/")) return;
-  // Red primero (para recibir cambios), caché si no hay conexión
+  // Network first (to receive updates), cache when offline
   e.respondWith(
     fetch(req).then(res => {
       if (res.ok && new URL(req.url).origin === location.origin) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }

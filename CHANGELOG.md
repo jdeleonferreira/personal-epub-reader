@@ -1,38 +1,41 @@
-# Cambios de Atril
+# Atril changelog
 
-Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
-Las versiones siguen [versionado semántico](https://semver.org/lang/es/): MAYOR.MENOR.PARCHE.
+Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+Versions follow [semantic versioning](https://semver.org/): MAJOR.MINOR.PATCH.
 
-## [Sin publicar]
+## [Unreleased]
 
 ## [1.1.0] - 2026-09-29
 
-### Agregado
-- **App de Windows para la Microsoft Store** (`windows/`): ventana propia con WebView2, sin navegador ni consola.
-  Incluye el servidor de Atril en un puerto aleatorio de 127.0.0.1, protegido con un token por sesión.
-- Paquete MSIX (x64 y ARM64) con `windows/empaquetar.ps1` y en cada Release de GitHub.
-- Doble clic en un `.epub` del Explorador lo abre en Atril (si ya está abierto, en la misma ventana).
-- Selector de carpetas de Windows para elegir la carpeta de libros.
-- Política de privacidad (`PRIVACIDAD.md`) y guía de publicación (`windows/TIENDA.md`).
+### Added
+- **Windows app for the Microsoft Store** (`windows/`): its own window with WebView2, no browser or console.
+  It runs the Atril server on a random 127.0.0.1 port, protected with a per-session token.
+- MSIX package (x64 and ARM64) with `windows/package.ps1` and in every GitHub Release.
+- Double-clicking an `.epub` in File Explorer opens it in Atril (in the same window if Atril is already open).
+- Windows folder picker to choose the books folder.
+- Privacy policy (`PRIVACY.md`) and Store publishing guide (`windows/STORE.md`).
 
-### Cambiado
-- La versión está ahora en `Directory.Build.props`, compartida por la app web y la de Windows.
-- La lógica del servidor pasó de `Program.cs` a `AtrilServidor.cs` para reutilizarla en las dos apps.
+### Changed
+- **Everything is now in English**: user interface, sample book, code, file and class names, API routes,
+  scripts and documentation. Libraries and settings saved by earlier versions keep working.
+- The version now lives in `Directory.Build.props`, shared by the web and Windows apps.
+- The server logic moved from `Program.cs` to `AtrilServer.cs` so both apps use it.
+- Synology setting `CarpetaLibros` is now `BooksFolder` (the old name is still read).
 
 ## [1.0.0] - 2026-09-29
 
-Primera versión.
+First version.
 
-### Agregado
-- Biblioteca de libros EPUB con portadas, progreso de lectura y libro de ejemplo.
-- Lector con modo páginas o desplazamiento, fondos claro/sepia/noche, tipo y tamaño de letra, interlineado, índice y barra de progreso.
-- Carpeta de libros elegible en el equipo: los EPUB abiertos o descargados se guardan ahí; los que se copien a la carpeta aparecen solos en la biblioteca. Al cambiar de carpeta se pueden mover los libros.
-- Conexión con Synology por QuickConnect (red local, internet o relay) o por dirección fija. Inicio de sesión desde la app, con verificación en dos pasos. La contraseña solo se guarda en memoria.
-- Descarga de libros del NAS a la carpeta local, sin volver a bajar los que ya están.
-- Número de versión visible en la app y en `/api/salud`.
-- Protección contra publicar credenciales: hook pre-commit, revisión en GitHub Actions y configuración privada en `appsettings.Local.json`.
-- Publicación automática en GitHub Releases para Windows, macOS y Linux al subir una etiqueta `vX.Y.Z`.
+### Added
+- EPUB library with covers, reading progress and a sample book.
+- Reader with page or scroll layout, light/sepia/night backgrounds, font and size, line spacing, table of contents and progress bar.
+- Books folder of your choice: EPUB files you open or download are saved there; files copied into it show up automatically. Books can be moved when changing folders.
+- Synology connection through QuickConnect (home network, internet or relay) or a fixed address. Sign-in from the app, with two-step verification. The password is only kept in memory.
+- Download books from the NAS into the local folder, skipping the ones already there.
+- Version number shown in the app and in the health endpoint.
+- Protection against publishing credentials: pre-commit hook, GitHub Actions check and private settings in `appsettings.Local.json`.
+- Automatic GitHub Releases for Windows, macOS and Linux when a `vX.Y.Z` tag is pushed.
 
-### Corregido
-- Libros cuyo CSS tiene caracteres fuera de Latin-1 no se abrían (`btoa` en epub.js).
-- Error `replaceCss` al importar libros.
+### Fixed
+- Books whose CSS contains characters outside Latin-1 didn't open (`btoa` in epub.js).
+- `replaceCss` error when importing books.

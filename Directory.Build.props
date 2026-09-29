@@ -1,7 +1,7 @@
 <Project>
-  <!-- Versión única de Atril para todos los proyectos (web y Windows).
-       Súbela con scripts/nueva-version.ps1 y anota los cambios en CHANGELOG.md.
-       MAYOR.MENOR.PARCHE: la app de la Tienda usa MAYOR.MENOR.PARCHE.0 -->
+  <!-- Single Atril version for every project (web and Windows).
+       Bump it with scripts/new-version.ps1 and note the changes in CHANGELOG.md.
+       MAJOR.MINOR.PATCH: the Store app uses MAJOR.MINOR.PATCH.0 -->
   <PropertyGroup>
     <Version>1.1.0</Version>
     <Product>Atril</Product>

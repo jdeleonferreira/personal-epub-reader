@@ -5,11 +5,11 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Atril</RootNamespace>
-    <!-- La versión está en Directory.Build.props -->
-    <Description>Lector de libros EPUB con biblioteca local y conexión a Synology.</Description>
+    <!-- The version lives in Directory.Build.props -->
+    <Description>EPUB reader with a local library and Synology NAS access.</Description>
   </PropertyGroup>
 
-  <!-- La app de Windows (Microsoft Store) es un proyecto aparte dentro de windows/ -->
+  <!-- The Windows app (Microsoft Store) is a separate project inside windows/ -->
   <ItemGroup>
     <Compile Remove="windows/**" />
     <Content Remove="windows/**" />

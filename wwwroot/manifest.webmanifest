@@ -1,8 +1,8 @@
 {
   "name": "Atril",
   "short_name": "Atril",
-  "description": "Lector de libros EPUB",
-  "lang": "es",
+  "description": "EPUB book reader",
+  "lang": "en",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

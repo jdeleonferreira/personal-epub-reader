@@ -1,169 +1,171 @@
 # Atril
 
-Lector de libros EPUB que corre en el navegador y se instala como app en tu PC.
-Guarda los libros en la carpeta que elijas y puede traerlos de tu Synology.
+An EPUB reader that runs in the browser and as a Windows app.
+It keeps your books in a folder you choose and can open them straight from your Synology NAS.
 
-Versión actual: ver `<Version>` en [`Directory.Build.props`](Directory.Build.props) y los cambios en [`CHANGELOG.md`](CHANGELOG.md).
+Current version: see `<Version>` in [`Directory.Build.props`](Directory.Build.props) and the changes in [`CHANGELOG.md`](CHANGELOG.md).
 
-Hay dos formas de usarlo:
+Two ways to use it:
 
-- **Navegador** (`dotnet run`): Windows, macOS y Linux. Abre http://localhost:5080.
-- **App de Windows** (`windows/`): ventana propia, para la Microsoft Store. Ver [`windows/TIENDA.md`](windows/TIENDA.md).
+- **Browser** (`dotnet run`): Windows, macOS and Linux. Opens http://localhost:5080.
+- **Windows app** (`windows/`): its own window, for the Microsoft Store. See [`windows/STORE.md`](windows/STORE.md).
 
-## Requisitos
+## Requirements
 
-- .NET 8 SDK o más reciente (`dotnet --version` para comprobarlo)
+- .NET 8 SDK or newer (`dotnet --version` to check)
 
-## Ejecutar
+## Run
 
 ```bash
-cd Atril
+cd personal-epub-reader
 dotnet run
 ```
 
-Abre http://localhost:5080. En Visual Studio o Rider basta con abrir `Atril.csproj` y pulsar ▶.
+Open http://localhost:5080. In Visual Studio or Rider, open `Atril.csproj` and press ▶.
 
-## Primera vez después de clonar
-
-```bash
-git config core.hooksPath .githooks          # activa la revisión de secretos antes de cada commit
-cp appsettings.Local.example.json appsettings.Local.json   # tu configuración personal (no se sube)
-```
-
-Opcional: escribe en `.git/info/atril-privado` (un texto por línea) datos tuyos que nunca deben
-aparecer en el código, como tu ID de QuickConnect o tu usuario del NAS. El hook bloquea cualquier commit que los contenga.
-
-## Carpeta de libros
-
-Los EPUB viven en una carpeta de tu equipo; por defecto `Documentos/Atril`. Se cambia con
-**Cambiar carpeta** en la biblioteca, donde se puede crear una carpeta nueva y mover los libros a ella.
-
-- Lo que abras con **Abrir EPUB** o arrastres a la ventana se copia a esa carpeta.
-- Lo que descargues del Synology se guarda ahí (si ya está, no se vuelve a bajar).
-- Los EPUB que copies a la carpeta por tu cuenta (también en subcarpetas) aparecen solos en la biblioteca.
-- **Eliminar** un libro borra también el archivo.
-
-La ruta elegida se guarda en `%LOCALAPPDATA%\Atril\config.json` (Windows) o `~/.local/share/Atril/config.json`.
-El navegador solo guarda la ficha de cada libro (título, portada) y el avance de lectura.
-Si Atril se usa sin su servidor (versión web pura), los libros se guardan dentro del navegador.
-
-## Conexión con Synology (QuickConnect)
-
-El botón **Synology** muestra las carpetas del NAS y abre los EPUB directamente.
-El navegador no habla con el NAS: el servidor de Atril hace de puente (`/api/synology/*`).
-
-1. Pulsa **Synology** en la biblioteca.
-2. Escribe el **ID de QuickConnect** (lo que va antes de `.quickconnect.to`), tu **usuario** y tu **contraseña** de DSM.
-3. Si la cuenta tiene verificación en dos pasos, Atril pide el código una sola vez.
-
-Qué se guarda y dónde:
-
-- **Contraseña:** solo en la memoria del servidor de Atril mientras está encendido. Nunca en disco ni en el navegador.
-  Al reiniciar Atril se pide de nuevo. **Cerrar sesión** la borra al instante.
-- **ID de QuickConnect y usuario:** en el navegador (localStorage), para rellenar el formulario.
-- **Token de dispositivo 2FA:** en `%LOCALAPPDATA%\Atril` (Windows) o `~/.local/share/Atril`, uno por usuario y NAS.
-
-Opciones en `appsettings.Local.json`, sección `Synology` (todas opcionales):
-
-- `QuickConnectId`: valor que aparece de entrada en el formulario.
-- `CarpetaLibros`: carpeta del NAS con los libros, por ejemplo `/home` o `/home/Libros`. Atril no deja salir de ella. `/` muestra todas las carpetas compartidas.
-- `Url`: dirección fija del NAS (`https://192.168.1.10:5001` o tu DDNS). Si se llena, QuickConnect no se usa.
-
-Se recomienda una cuenta de DSM solo con permiso de lectura sobre la carpeta de libros.
-
-### Cómo encuentra el NAS
-
-1. Pregunta a `global.quickconnect.to` por tu ID y recibe las direcciones del NAS: red local, IP pública, DDNS y relay.
-2. Las prueba todas a la vez con `/webman/pingpong.cgi` y se queda con la mejor que responda:
-   red local → DDNS → IP pública → relay de Synology. El NAS se identifica con `ezid` (MD5 de su serverID).
-3. Inicia sesión en la API de File Station y guarda la sesión en memoria. Si cambias de red, vuelve a buscar el NAS.
-
-Si no conecta, revisa qué direcciones se probaron:
+## First time after cloning
 
 ```bash
-curl -H "X-Atril: 1" http://localhost:5080/api/synology/diagnostico
+git config core.hooksPath .githooks                        # turns on the secret check before every commit
+cp appsettings.Local.example.json appsettings.Local.json   # your personal settings (never pushed)
 ```
 
-## Seguridad: qué nunca se sube a GitHub
+Optional: write in `.git/info/atril-private` (one entry per line) personal data that must never
+appear in the code, such as your QuickConnect ID or NAS username. The hook blocks any commit that contains them.
 
-| Protección | Dónde |
+## Books folder
+
+EPUB files live in a folder on your computer; by default `Documents/Atril`. Change it with
+**Change folder** in the library, where you can also create a new folder and move your books into it.
+
+- Whatever you open with **Open EPUB** or drop on the window is copied to that folder.
+- Whatever you download from the Synology is saved there (if it's already there, it isn't downloaded again).
+- EPUB files you copy into the folder yourself (subfolders included) show up in the library automatically.
+- **Delete** removes the book and its file.
+
+The chosen path is stored in `%LOCALAPPDATA%\Atril\config.json` (Windows) or `~/.local/share/Atril/config.json`.
+The browser only keeps each book's record (title, cover) and your reading progress.
+When Atril runs without its server (plain web version), books are stored inside the browser.
+
+## Synology connection (QuickConnect)
+
+The **Synology** button lists the NAS folders and opens EPUB files directly.
+The page never talks to the NAS: the Atril server acts as the bridge (`/api/synology/*`).
+
+1. Click **Synology** in the library.
+2. Enter the **QuickConnect ID** (the part before `.quickconnect.to`), your DSM **username** and **password**.
+3. If the account uses two-step verification, Atril asks for the code once.
+
+What is stored, and where:
+
+- **Password:** only in the Atril server's memory while it runs. Never on disk or in the browser.
+  Atril asks for it again after a restart. **Sign out** forgets it immediately.
+- **QuickConnect ID and username:** in the browser (localStorage), to prefill the form.
+- **2FA device token:** in `%LOCALAPPDATA%\Atril` (Windows) or `~/.local/share/Atril`, one per user and NAS.
+
+Options in `appsettings.Local.json`, `Synology` section (all optional):
+
+- `QuickConnectId`: value prefilled in the form.
+- `BooksFolder`: NAS folder with the books, e.g. `/home` or `/home/Books`. Atril never goes outside it. `/` shows every shared folder.
+- `Url`: fixed NAS address (`https://192.168.1.10:5001` or your DDNS name). When set, QuickConnect isn't used.
+
+Using a DSM account with read-only access to the books folder is recommended.
+
+### How it finds the NAS
+
+1. Asks `global.quickconnect.to` about your ID and gets the NAS addresses: home network, public IP, DDNS and relay.
+2. Tries them all at once with `/webman/pingpong.cgi` and keeps the best one that answers:
+   home network → DDNS → public IP → Synology relay. The NAS proves its identity with `ezid` (MD5 of its serverID).
+3. Signs in to the File Station API and keeps the session in memory. If you change networks, it looks for the NAS again.
+
+If it can't connect, see which addresses were tried:
+
+```bash
+curl -H "X-Atril: 1" http://localhost:5080/api/synology/diagnostics
+```
+
+## Security: what never goes to GitHub
+
+| Protection | Where |
 |---|---|
-| Configuración personal en `appsettings.Local.json` (ignorado por git) | `.gitignore` |
-| Certificados, llaves, `.env`, tokens 2FA y los propios libros ignorados | `.gitignore` |
-| Revisión antes de cada commit: contraseñas, tokens, IDs de conexión, tu lista privada | `.githooks/pre-commit` → `scripts/revisar-secretos.sh` |
-| La misma revisión más [Gitleaks](https://github.com/gitleaks/gitleaks) sobre todo el historial en cada push | `.github/workflows/ci.yml` |
+| Personal settings in `appsettings.Local.json` (ignored by git) | `.gitignore` |
+| Certificates, keys, `.env`, 2FA tokens and the books themselves are ignored | `.gitignore` |
+| Check before every commit: passwords, tokens, connection IDs, your private list | `.githooks/pre-commit` → `scripts/check-secrets.sh` |
+| The same check plus [Gitleaks](https://github.com/gitleaks/gitleaks) over the whole history on every push | `.github/workflows/ci.yml` |
 
-En GitHub activa también **Settings → Code security → Secret scanning → Push protection**.
+On GitHub, also turn on **Settings → Code security → Secret scanning → Push protection**.
 
-`appsettings.json` solo lleva valores genéricos; el hook rechaza cualquier `QuickConnectId`, `Usuario`,
-`Url` o contraseña con valor en ese archivo.
+`appsettings.json` only holds generic values; the hook rejects any `QuickConnectId`, `Username`,
+`Url` or password with a value in that file.
 
-## Versiones
+## Versions
 
-Versionado semántico (`MAYOR.MENOR.PARCHE`). La versión se define **solo** en `Directory.Build.props`
-(la usan la app web y la de Windows); la app la muestra junto al título y en `/api/salud`.
+Semantic versioning (`MAJOR.MINOR.PATCH`). The version is defined **only** in `Directory.Build.props`
+(used by both the web and Windows apps); the app shows it next to its name and in `/api/health`.
 
-Para publicar una versión:
+To publish a version:
 
-1. Anota los cambios en `CHANGELOG.md` bajo `## [Sin publicar]`.
-2. Ejecuta (PowerShell):
+1. Write the changes in `CHANGELOG.md` under `## [Unreleased]`.
+2. Run (PowerShell):
 
    ```powershell
-   ./scripts/nueva-version.ps1 1.1.0
+   ./scripts/new-version.ps1 1.2.0
    git push --follow-tags
    ```
 
-   El script sube el número en `Directory.Build.props` y `sw.js`, fecha la sección del CHANGELOG, hace commit y crea la etiqueta `v1.1.0`.
-3. GitHub Actions (`release.yml`) revisa secretos, comprueba que la etiqueta coincida con el proyecto,
-   compila para Windows, macOS y Linux, crea el `.msixbundle` para la Microsoft Store
-   y publica la *Release* con los archivos y las notas del CHANGELOG.
+   The script bumps the number in `Directory.Build.props` and `sw.js`, dates the CHANGELOG section, commits and creates the `v1.2.0` tag.
+3. GitHub Actions (`release.yml`) checks for secrets, confirms the tag matches the project,
+   builds for Windows, macOS and Linux, creates the `.msixbundle` for the Microsoft Store
+   and publishes the *Release* with the files and the CHANGELOG notes.
 
-## Publicar a mano
+## Manual publish
 
 ```bash
-dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o publicado
+dotnet publish Atril.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o publish
 ```
 
-El ejecutable abre el navegador en http://localhost:5080 (se desactiva con `"AbrirNavegador": false`).
-Solo escucha en `localhost`: otros equipos de la red no pueden usarlo.
+The executable opens the browser at http://localhost:5080 (turn it off with `"OpenBrowser": false`).
+It only listens on `localhost`: other computers on the network can't use it.
 
-## Estructura
+## Structure
 
-| Archivo | Qué hace |
+| File | What it does |
 |---|---|
-| `wwwroot/index.html` | La app (biblioteca, lector, carpeta, Synology) usando epub.js |
-| `wwwroot/sw.js` | Service worker: la versión de navegador abre sin conexión |
-| `AtrilServidor.cs` | Servidor ASP.NET Core y endpoints `/api/*` (compartido) |
-| `Program.cs` | Arranque de la versión para navegador |
-| `windows/` | App de Windows (WebView2 + MSIX) para la Microsoft Store |
-| `Local/BibliotecaLocal.cs` | Carpeta de libros del equipo |
-| `Synology/QuickConnectResolver.cs` | Encuentra el NAS por QuickConnect |
-| `Synology/SynologyService.cs` | Sesión, listado y descarga con File Station |
+| `wwwroot/index.html` | The app (library, reader, folder, Synology) using epub.js |
+| `wwwroot/sw.js` | Service worker: the browser version opens offline |
+| `AtrilServer.cs` | ASP.NET Core server and `/api/*` endpoints (shared) |
+| `Program.cs` | Starts the browser version |
+| `Local/LocalLibrary.cs` | Books folder on this computer |
+| `Synology/QuickConnectResolver.cs` | Finds the NAS through QuickConnect |
+| `Synology/SynologyService.cs` | Session, listing and download with File Station |
+| `windows/` | Windows app (WebView2 + MSIX) for the Microsoft Store |
 
 ### Endpoints
 
-Todos los de `/api/local` y `/api/synology` exigen la cabecera `X-Atril`, para que otras páginas
-abiertas en el navegador no puedan usarlos.
+Every `/api/local` and `/api/synology` route requires the `X-Atril` header, so other websites
+open in the browser can't use them.
 
-| Ruta | Qué hace |
+| Route | What it does |
 |---|---|
-| `GET /api/salud` | Versión y estado |
-| `GET/PUT /api/local/config` | Carpeta de libros (`{ "carpeta", "mover" }`) |
-| `GET /api/local/explorar?ruta=` | Carpetas del equipo para elegir |
-| `GET /api/local/libros` | EPUB en la carpeta |
-| `GET/DELETE /api/local/libro?archivo=` | Leer o borrar un libro |
-| `POST /api/local/libros?nombre=` | Guardar un EPUB en la carpeta |
-| `POST /api/local/importar` | App de Windows: copiar a la biblioteca un `.epub` abierto con doble clic |
-| `POST /api/synology/conectar` | Buscar el NAS e iniciar sesión |
-| `POST /api/synology/desconectar` | Cerrar sesión y olvidar la contraseña |
-| `GET /api/synology/carpetas?ruta=` | Carpetas y EPUB del NAS |
-| `GET /api/synology/libro?ruta=&tamano=` | Descargar del NAS a la carpeta local |
-| `GET /api/synology/diagnostico` | Direcciones probadas por QuickConnect |
+| `GET /api/health` | Version and status |
+| `GET/PUT /api/local/config` | Books folder (`{ "folder", "move" }`) |
+| `GET /api/local/browse?path=` | Folders on this computer to choose from |
+| `POST /api/local/folders` | Create a folder (`{ "parent", "name" }`) |
+| `GET /api/local/books` | EPUB files in the folder |
+| `GET/DELETE /api/local/book?file=` | Read or delete a book |
+| `POST /api/local/books?name=` | Save an EPUB in the folder |
+| `POST /api/local/import` | Windows app: copy into the library an `.epub` opened with a double click |
+| `GET /api/synology/status` | Whether it's connected |
+| `POST /api/synology/connect` | Find the NAS and sign in (`{ "quickConnectId", "username", "password", "otp" }`) |
+| `POST /api/synology/disconnect` | Sign out and forget the password |
+| `GET /api/synology/folders?path=` | NAS folders and EPUB files |
+| `GET /api/synology/book?path=&size=` | Download from the NAS into the local folder |
+| `GET /api/synology/diagnostics` | Addresses tried by QuickConnect |
 
-## Privacidad
+## Privacy
 
-Ver [`PRIVACIDAD.md`](PRIVACIDAD.md). Atril no recopila ni envía datos personales.
+See [`PRIVACY.md`](PRIVACY.md). Atril doesn't collect or send personal data.
 
-## Licencias de terceros
+## Third-party licenses
 
-Ver [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
+See [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
