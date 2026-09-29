@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Manifiesto del paquete MSIX de Atril. windows/empaquetar.ps1 reemplaza los valores {{...}}.
+  Los valores de identidad los da Partner Center (Producto → Administración de productos → Identidad del producto):
+    {{IDENTIDAD}}      Package/Identity/Name            p. ej. 12345JaimeDeLeon.Atril
+    {{EDITOR}}         Package/Identity/Publisher       p. ej. CN=ABCD1234-...
+    {{EDITOR_NOMBRE}}  Package/Properties/PublisherDisplayName
+    {{NOMBRE}}         nombre reservado en la Tienda
+-->
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap rescap">
+
+  <Identity Name="{{IDENTIDAD}}" Publisher="{{EDITOR}}" Version="{{VERSION}}" ProcessorArchitecture="{{ARQ}}" />
+
+  <Properties>
+    <DisplayName>{{NOMBRE}}</DisplayName>
+    <PublisherDisplayName>{{EDITOR_NOMBRE}}</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+    <Description>Lector de libros EPUB con biblioteca local y conexión a Synology.</Description>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="es-ES" />
+  </Resources>
+
+  <Applications>
+    <Application Id="Atril" Executable="Atril.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="{{NOMBRE}}"
+        Description="Lee tus libros EPUB y ábrelos desde tu Synology."
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" Square71x71Logo="Assets\Square71x71Logo.png" Square310x310Logo="Assets\Square310x310Logo.png" ShortName="{{NOMBRE}}">
+          <uap:ShowNameOnTiles>
+            <uap:ShowOn Tile="square150x150Logo" />
+            <uap:ShowOn Tile="wide310x150Logo" />
+          </uap:ShowNameOnTiles>
+        </uap:DefaultTile>
+        <uap:SplashScreen Image="Assets\SplashScreen.png" BackgroundColor="#2c5d8f" />
+      </uap:VisualElements>
+
+      <Extensions>
+        <!-- Doble clic en un .epub abre Atril (Windows pasa la ruta como argumento) -->
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap:FileTypeAssociation Name="epub">
+            <uap:DisplayName>Libro EPUB</uap:DisplayName>
+            <uap:Logo>Assets\StoreLogo.png</uap:Logo>
+            <uap:SupportedFileTypes>
+              <uap:FileType ContentType="application/epub+zip">.epub</uap:FileType>
+            </uap:SupportedFileTypes>
+          </uap:FileTypeAssociation>
+        </uap:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <!-- Internet: QuickConnect, relay de Synology y fuentes tipográficas -->
+    <Capability Name="internetClient" />
+    <!-- Red local: llegar al NAS en casa -->
+    <Capability Name="privateNetworkClientServer" />
+    <!-- App de escritorio (.NET + WebView2). La Tienda la aprueba para apps de escritorio empaquetadas -->
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>

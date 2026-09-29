@@ -3,7 +3,12 @@
 Lector de libros EPUB que corre en el navegador y se instala como app en tu PC.
 Guarda los libros en la carpeta que elijas y puede traerlos de tu Synology.
 
-Versión actual: ver `<Version>` en [`Atril.csproj`](Atril.csproj) y los cambios en [`CHANGELOG.md`](CHANGELOG.md).
+Versión actual: ver `<Version>` en [`Directory.Build.props`](Directory.Build.props) y los cambios en [`CHANGELOG.md`](CHANGELOG.md).
+
+Hay dos formas de usarlo:
+
+- **Navegador** (`dotnet run`): Windows, macOS y Linux. Abre http://localhost:5080.
+- **App de Windows** (`windows/`): ventana propia, para la Microsoft Store. Ver [`windows/TIENDA.md`](windows/TIENDA.md).
 
 ## Requisitos
 
@@ -95,8 +100,8 @@ En GitHub activa también **Settings → Code security → Secret scanning → P
 
 ## Versiones
 
-Versionado semántico (`MAYOR.MENOR.PARCHE`). La versión se define **solo** en `Atril.csproj`;
-la app la muestra junto al título y en `/api/salud`.
+Versionado semántico (`MAYOR.MENOR.PARCHE`). La versión se define **solo** en `Directory.Build.props`
+(la usan la app web y la de Windows); la app la muestra junto al título y en `/api/salud`.
 
 Para publicar una versión:
 
@@ -108,9 +113,10 @@ Para publicar una versión:
    git push --follow-tags
    ```
 
-   El script sube el número en `Atril.csproj` y `sw.js`, fecha la sección del CHANGELOG, hace commit y crea la etiqueta `v1.1.0`.
+   El script sube el número en `Directory.Build.props` y `sw.js`, fecha la sección del CHANGELOG, hace commit y crea la etiqueta `v1.1.0`.
 3. GitHub Actions (`release.yml`) revisa secretos, comprueba que la etiqueta coincida con el proyecto,
-   compila para Windows, macOS y Linux y crea la *Release* con los `.zip` y las notas del CHANGELOG.
+   compila para Windows, macOS y Linux, crea el `.msixbundle` para la Microsoft Store
+   y publica la *Release* con los archivos y las notas del CHANGELOG.
 
 ## Publicar a mano
 
@@ -126,8 +132,10 @@ Solo escucha en `localhost`: otros equipos de la red no pueden usarlo.
 | Archivo | Qué hace |
 |---|---|
 | `wwwroot/index.html` | La app (biblioteca, lector, carpeta, Synology) usando epub.js |
-| `wwwroot/sw.js` | Service worker: la app abre sin conexión |
-| `Program.cs` | Servidor ASP.NET Core y endpoints `/api/*` |
+| `wwwroot/sw.js` | Service worker: la versión de navegador abre sin conexión |
+| `AtrilServidor.cs` | Servidor ASP.NET Core y endpoints `/api/*` (compartido) |
+| `Program.cs` | Arranque de la versión para navegador |
+| `windows/` | App de Windows (WebView2 + MSIX) para la Microsoft Store |
 | `Local/BibliotecaLocal.cs` | Carpeta de libros del equipo |
 | `Synology/QuickConnectResolver.cs` | Encuentra el NAS por QuickConnect |
 | `Synology/SynologyService.cs` | Sesión, listado y descarga con File Station |
@@ -145,11 +153,16 @@ abiertas en el navegador no puedan usarlos.
 | `GET /api/local/libros` | EPUB en la carpeta |
 | `GET/DELETE /api/local/libro?archivo=` | Leer o borrar un libro |
 | `POST /api/local/libros?nombre=` | Guardar un EPUB en la carpeta |
+| `POST /api/local/importar` | App de Windows: copiar a la biblioteca un `.epub` abierto con doble clic |
 | `POST /api/synology/conectar` | Buscar el NAS e iniciar sesión |
 | `POST /api/synology/desconectar` | Cerrar sesión y olvidar la contraseña |
 | `GET /api/synology/carpetas?ruta=` | Carpetas y EPUB del NAS |
 | `GET /api/synology/libro?ruta=&tamano=` | Descargar del NAS a la carpeta local |
 | `GET /api/synology/diagnostico` | Direcciones probadas por QuickConnect |
+
+## Privacidad
+
+Ver [`PRIVACIDAD.md`](PRIVACIDAD.md). Atril no recopila ni envía datos personales.
 
 ## Licencias de terceros
 

@@ -5,6 +5,20 @@ Las versiones siguen [versionado semántico](https://semver.org/lang/es/): MAYOR
 
 ## [Sin publicar]
 
+## [1.1.0] - 2026-09-29
+
+### Agregado
+- **App de Windows para la Microsoft Store** (`windows/`): ventana propia con WebView2, sin navegador ni consola.
+  Incluye el servidor de Atril en un puerto aleatorio de 127.0.0.1, protegido con un token por sesión.
+- Paquete MSIX (x64 y ARM64) con `windows/empaquetar.ps1` y en cada Release de GitHub.
+- Doble clic en un `.epub` del Explorador lo abre en Atril (si ya está abierto, en la misma ventana).
+- Selector de carpetas de Windows para elegir la carpeta de libros.
+- Política de privacidad (`PRIVACIDAD.md`) y guía de publicación (`windows/TIENDA.md`).
+
+### Cambiado
+- La versión está ahora en `Directory.Build.props`, compartida por la app web y la de Windows.
+- La lógica del servidor pasó de `Program.cs` a `AtrilServidor.cs` para reutilizarla en las dos apps.
+
 ## [1.0.0] - 2026-09-29
 
 Primera versión.

@@ -302,6 +302,7 @@ button { font: inherit; color: inherit; }
     <form id="dirNewForm" hidden><input type="text" id="dirNewName" placeholder="Nombre de la nueva carpeta" aria-label="Nombre de la nueva carpeta"><button class="btn" type="submit">Crear</button></form>
     <label><input type="checkbox" id="dirMove" checked> Mover los libros de la carpeta actual a la nueva</label>
     <div class="row-btns">
+      <button class="btn" id="dirNative" type="button" hidden>Elegir con Windows…</button>
       <button class="btn" id="dirNew" type="button">Nueva carpeta</button>
       <button class="btn primary" id="dirUse" type="button">Usar esta carpeta</button>
     </div>
@@ -864,6 +865,31 @@ button { font: inherit; color: inherit; }
     finally { btn.disabled = false; }
   };
 
+  /* ---------- App de Windows (WebView2) ----------
+     La ventana de Atril se comunica con la página por mensajes:
+       página → app: {tipo:"listo"}, {tipo:"elegirCarpeta", inicial}
+       app → página: {tipo:"carpetaElegida", ruta}, {tipo:"abrirArchivo", ruta} */
+  const app = window.chrome && window.chrome.webview;
+  if (app) {
+    $("dirNative").hidden = false;
+    $("dirNative").onclick = () => app.postMessage({ tipo: "elegirCarpeta", inicial: dir.ruta || loc.carpeta || null });
+    app.addEventListener("message", async ev => {
+      const m = ev.data || {};
+      if (m.tipo === "carpetaElegida" && m.ruta) { if (!$("dirDlg").open) $("dirDlg").showModal(); await dirIr(m.ruta); }
+      if (m.tipo === "abrirArchivo" && m.ruta) await abrirArchivoExterno(m.ruta);
+    });
+  }
+  // Un .epub abierto con doble clic desde el Explorador: se copia a la carpeta de libros y se abre
+  async function abrirArchivoExterno(ruta) {
+    try {
+      if (!$("reader").hidden) await closeReader();
+      const { archivo } = await (await apiLocal("/importar", { method: "POST", json: { ruta } })).json();
+      const buf = await (await apiLocal("/libro?archivo=" + encodeURIComponent(archivo))).arrayBuffer();
+      const rec = await importBuffer(buf, nombreDe(archivo), null, { archivo });
+      await renderLibrary(); openBook(rec.id);
+    } catch (e) { toast(e.message); }
+  }
+
   /* ---------- Versión ---------- */
   fetch("/api/salud").then(r => r.ok ? r.json() : null).then(j => { if (j && j.version) $("appVer").textContent = "v" + j.version; }).catch(() => {});
 
@@ -876,10 +902,14 @@ button { font: inherit; color: inherit; }
       try { await importBuffer(await makeSample(), "Cómo usar Atril.epub", SAMPLE_ID); } catch (e) { console.error(e); }
     }
     await renderLibrary();
+    if (app) app.postMessage({ tipo: "listo" });
     await sincronizarCarpeta();
   })();
 })();
 </script>
-<script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
+<script>
+// En la app de Windows (WebView2) no hace falta el service worker: todo está instalado en el equipo.
+if ("serviceWorker" in navigator && !(window.chrome && window.chrome.webview)) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
 </body>
 </html>
