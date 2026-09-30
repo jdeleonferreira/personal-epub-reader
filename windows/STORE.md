@@ -1,4 +1,6 @@
-# Publishing Atril on the Microsoft Store
+# Publishing Atril on the Microsoft Store (optional)
+
+> To simply use Atril on your PC you don't need the Store: run `windows/install.ps1` (see the README).
 
 The Windows app lives in this folder (`windows/`). It's a WebView2 window (the Edge engine) that
 shows the same web app and runs the Atril server inside it, with no browser, console or port open to the network.

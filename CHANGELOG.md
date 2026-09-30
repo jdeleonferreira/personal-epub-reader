@@ -5,6 +5,11 @@ Versions follow [semantic versioning](https://semver.org/): MAJOR.MINOR.PATCH.
 
 ## [Unreleased]
 
+### Added
+- `windows/install.ps1`: builds the Windows app and installs it as a normal program, without the Microsoft Store
+  (Start menu shortcut, "Open with" for `.epub` files, entry in Settings → Apps to uninstall).
+- Every GitHub Release includes a portable Windows app (`Atril-Windows-x64.zip`) that runs without installing.
+
 ## [1.1.0] - 2026-09-29
 
 ### Added

@@ -7,8 +7,9 @@ Current version: see `<Version>` in [`Directory.Build.props`](Directory.Build.pr
 
 Two ways to use it:
 
+- **Windows app** (`windows/`): a normal Windows program with its own window. It runs everything inside,
+  including the Synology connection, so nothing else needs to be running. See [Install on Windows](#install-on-windows).
 - **Browser** (`dotnet run`): Windows, macOS and Linux. Opens http://localhost:5080.
-- **Windows app** (`windows/`): its own window, for the Microsoft Store. See [`windows/STORE.md`](windows/STORE.md).
 
 ## Requirements
 
@@ -22,6 +23,27 @@ dotnet run
 ```
 
 Open http://localhost:5080. In Visual Studio or Rider, open `Atril.csproj` and press ▶.
+
+## Install on Windows
+
+In PowerShell, at the project root:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File windows\install.ps1
+```
+
+It builds Atril and installs it for your user (no administrator rights):
+
+- Program in `%LOCALAPPDATA%\Programs\Atril`, with a **Start menu** shortcut
+  (add `-DesktopShortcut` for a desktop one too).
+- Atril appears in **Open with** for `.epub` files; to make it the default, choose
+  *Open with → Choose another app → Atril → Always*.
+- It's listed in **Settings → Apps**, where it can be uninstalled like any other app
+  (or run the script with `-Uninstall`).
+
+To update: `git pull`, then run the same command again. Your books, library and settings are kept.
+
+Requirements: .NET 8 SDK to build it, and Windows 10 or 11 (they include the WebView2 runtime Atril uses).
 
 ## First time after cloning
 
@@ -138,7 +160,7 @@ It only listens on `localhost`: other computers on the network can't use it.
 | `Local/LocalLibrary.cs` | Books folder on this computer |
 | `Synology/QuickConnectResolver.cs` | Finds the NAS through QuickConnect |
 | `Synology/SynologyService.cs` | Session, listing and download with File Station |
-| `windows/` | Windows app (WebView2 + MSIX) for the Microsoft Store |
+| `windows/` | Windows app (WebView2): `install.ps1` installs it; `package.ps1` and `STORE.md` for an optional Microsoft Store release |
 
 ### Endpoints
 
