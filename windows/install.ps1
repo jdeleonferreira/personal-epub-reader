@@ -6,7 +6,7 @@
   - Installs into your user folder (%LOCALAPPDATA%\Programs\Atril): no administrator rights needed.
   - Adds Atril to the Start menu (and optionally the desktop).
   - Adds Atril to "Open with" for .epub files.
-  - Registers it in Settings → Apps, so it can be uninstalled like any other app.
+  - Registers it in Settings -> Apps, so it can be uninstalled like any other app.
   Run it again after `git pull` to update Atril. Your books, library and settings are kept.
 
   Requires the .NET 8 SDK (dotnet --version). Atril uses the Microsoft Edge WebView2 Runtime,
@@ -73,7 +73,7 @@ if (Test-Path $InstallDir) { Remove-Item $InstallDir -Recurse -Force }
 New-Item -ItemType Directory -Force -Path (Split-Path $InstallDir -Parent) | Out-Null
 Copy-Item $staging $InstallDir -Recurse
 Remove-Item $staging -Recurse -Force
-Copy-Item $PSCommandPath (Join-Path $InstallDir 'install.ps1')   # used by "Uninstall" in Settings → Apps
+Copy-Item $PSCommandPath (Join-Path $InstallDir 'install.ps1')   # used by "Uninstall" in Settings -> Apps
 
 # Shortcuts
 $shell = New-Object -ComObject WScript.Shell
@@ -84,7 +84,7 @@ foreach ($path in $links) {
   $s.Save()
 }
 
-# "Open with" for .epub files (doesn't change your default app; choose it in "Open with → Choose another app")
+# "Open with" for .epub files (doesn't change your default app; choose it in "Open with -> Choose another app")
 $cls = 'HKCU:\Software\Classes'
 New-Item -Force -Path "$cls\$progId\DefaultIcon" | Out-Null
 New-Item -Force -Path "$cls\$progId\shell\open\command" | Out-Null
@@ -98,7 +98,7 @@ Set-Item -Path "$cls\Applications\Atril.exe\shell\open\command" -Value "`"$exe`"
 New-Item -Force -Path "$cls\Applications\Atril.exe\SupportedTypes" | Out-Null
 New-ItemProperty -Force -Path "$cls\Applications\Atril.exe\SupportedTypes" -Name '.epub' -Value '' | Out-Null
 
-# Settings → Apps entry
+# Settings -> Apps entry
 New-Item -Force -Path $uninstallKey | Out-Null
 $size = [int]((Get-ChildItem $InstallDir -Recurse | Measure-Object Length -Sum).Sum / 1KB)
 $values = @{

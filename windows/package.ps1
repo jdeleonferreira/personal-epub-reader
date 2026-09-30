@@ -11,7 +11,7 @@
   ./windows/package.ps1 -Try
 
 .EXAMPLE
-  # Package to upload to the Store (values from Partner Center → Product identity):
+  # Package to upload to the Store (values from Partner Center -> Product identity):
   ./windows/package.ps1 -IdentityName "12345JaimeDeLeon.Atril" -Publisher "CN=ABCD1234-..." -PublisherName "Jaime De Leon"
 
 .NOTES
