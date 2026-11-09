@@ -175,7 +175,9 @@ public sealed class UpdateService(HttpClient http, IOptions<UpdateOptions> optio
             Directory.CreateDirectory(Path.GetDirectoryName(ResultFile)!);
             if (File.Exists(ResultFile)) File.Delete(ResultFile);
 
-            var start = new ProcessStartInfo("powershell.exe") { UseShellExecute = false, CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden };
+            // The script must not start inside the program folder (Atril's shortcut opens it there and a child
+            // process inherits it): Windows can't rename a folder that is some process's current directory.
+            var start = new ProcessStartInfo("powershell.exe") { UseShellExecute = false, CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden, WorkingDirectory = work };
             foreach (var a in new[] { "-NoProfile", "-ExecutionPolicy", "Bypass", "-WindowStyle", "Hidden", "-File", script,
                          "-ProcessId", Environment.ProcessId.ToString(), "-Source", root, "-Target", InstallDir,
                          "-Version", version, "-Work", work, "-Result", ResultFile })
@@ -235,7 +237,9 @@ public sealed class UpdateService(HttpClient http, IOptions<UpdateOptions> optio
     const string UpdateScript = """
         param([int]$ProcessId, [string]$Source, [string]$Target, [string]$Version, [string]$Work, [string]$Result)
         $ErrorActionPreference = 'Stop'
-        $log = Join-Path (Split-Path $Result -Parent) 'update.log'
+        Set-Location $env:TEMP
+        [Environment]::CurrentDirectory = $env:TEMP
+        $log =Join-Path (Split-Path $Result -Parent) 'update.log'
         function Write-Log($m) { Add-Content -Path $log -Value ((Get-Date -Format 'yyyy-MM-dd HH:mm:ss') + '  ' + $m) }
         function Save-Result($ok, $err) { @{ version = $Version; ok = $ok; error = $err } | ConvertTo-Json | Set-Content -Path $Result -Encoding UTF8 }
         $old = $Target + '.old'
