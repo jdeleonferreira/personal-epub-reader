@@ -1,0 +1,106 @@
+# Publishes a GitHub Release when a vX.Y.Z tag is pushed (scripts/new-version.ps1 creates it).
+# Atril's in-app updater reads these Releases: it shows the notes (taken from CHANGELOG.md) and
+# installs Atril-Windows-x64.zip / Atril-Windows-arm64.zip. GitHub Actions and Releases are free
+# for public repositories.
+name: Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: No secrets in the repository
+        run: bash scripts/check-secrets.sh --all
+      - name: The tag matches Directory.Build.props
+        id: version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          project="$(grep -oP '(?<=<Version>)[^<]+' Directory.Build.props)"
+          if [ "$tag" != "$project" ]; then echo "::error::Tag v$tag doesn't match the version in Directory.Build.props ($project)"; exit 1; fi
+          echo "version=$tag" >> "$GITHUB_OUTPUT"
+      - name: Release notes from CHANGELOG.md
+        run: |
+          v="${{ steps.version.outputs.version }}"
+          awk -v v="$v" '
+            $0 ~ "^## \\[" v "\\]" { on = 1; next }
+            on && /^## \[/ { exit }
+            on { print }
+          ' CHANGELOG.md | sed -e '/./,$!d' > notes.md
+          if [ ! -s notes.md ]; then echo "::error::CHANGELOG.md has no section for [$v]"; exit 1; fi
+          cat notes.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: notes
+          path: notes.md
+
+  windows:
+    needs: check
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      # Same layout as windows/install.ps1 installs, so the updater can swap the program folder
+      - name: Build the Windows app
+        shell: pwsh
+        run: |
+          $out = "out/Atril"
+          dotnet publish windows/Atril.Windows.csproj -c Release -r win-${{ matrix.arch }} --self-contained true -p:PublishSingleFile=false -o $out
+          if ($LASTEXITCODE) { exit 1 }
+          Get-ChildItem $out -Filter *.pdb -Recurse | Remove-Item -Force
+          Copy-Item windows/install.ps1 $out
+          Compress-Archive -Path "$out/*" -DestinationPath "Atril-Windows-${{ matrix.arch }}.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-${{ matrix.arch }}
+          path: 'Atril-Windows-${{ matrix.arch }}.zip'
+
+  browser:
+    needs: check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rid: [win-x64, linux-x64, osx-arm64, osx-x64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Build the browser version
+        run: |
+          dotnet publish Atril.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -o out
+          rm -f out/*.pdb
+          (cd out && zip -qr "../Atril-Browser-${{ matrix.rid }}.zip" .)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: browser-${{ matrix.rid }}
+          path: 'Atril-Browser-${{ matrix.rid }}.zip'
+
+  publish:
+    needs: [check, windows, browser]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" \
+            --title "Atril ${{ needs.check.outputs.version }}" --notes-file dist/notes.md \
+            dist/*.zip

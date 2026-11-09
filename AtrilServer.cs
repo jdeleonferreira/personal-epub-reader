@@ -10,13 +10,16 @@ using System.Net.Sockets;
 using System.Reflection;
 using Atril.Local;
 using Atril.Synology;
+using Atril.Updates;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Atril;
 
@@ -29,6 +32,8 @@ public sealed class ServerOptions
     public string? Urls { get; init; }
     /// <summary>Desktop app mode: doesn't open the browser.</summary>
     public bool AppMode { get; init; }
+    /// <summary>Desktop app: closes Atril's window (used after starting an update).</summary>
+    public Action? Exit { get; init; }
 }
 
 public static class AtrilServer
@@ -63,9 +68,18 @@ public static class AtrilServer
                 errors == System.Net.Security.SslPolicyErrors.None ||
                 (request.RequestUri is { } u && IsPrivateIp(u.Host))
         }) { Timeout = TimeSpan.FromMinutes(10) });
+        // Encryption for the Synology password the user asks to remember. Keys stay in the user's
+        // app data folder; on Windows they are protected with DPAPI (tied to the Windows account).
+        var keys = builder.Services.AddDataProtection().SetApplicationName("Atril")
+            .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(CredentialStore.DataDir, "keys")));
+        if (OperatingSystem.IsWindows()) keys.ProtectKeysWithDpapi();
+        builder.Services.AddSingleton<CredentialStore>();
         builder.Services.AddSingleton<QuickConnectResolver>();
         builder.Services.AddSingleton<SynologyService>();
         builder.Services.AddSingleton<LocalLibrary>();
+        builder.Services.Configure<UpdateOptions>(builder.Configuration.GetSection("Updates"));
+        builder.Services.AddSingleton(o);
+        builder.Services.AddSingleton<UpdateService>();
 
         var app = builder.Build();
 
@@ -145,6 +159,15 @@ public static class AtrilServer
             return Results.Ok(new { file = await l.SaveAsync(f, info.Name, info.Length, ct) });
         });
 
+        // Windows app: reads an .epub opened from File Explorer without copying it, so the page can check
+        // whether it's already in the library before importing it with /import
+        local.MapGet("/external", (string path) =>
+        {
+            if (!path.EndsWith(".epub", StringComparison.OrdinalIgnoreCase) || !Path.IsPathFullyQualified(path))
+                throw new LocalLibraryException("Only .epub files can be opened.");
+            return File.Exists(path) ? Results.File(Path.GetFullPath(path), "application/epub+zip") : throw new FileNotFoundException();
+        });
+
         local.MapDelete("/book", (LocalLibrary l, string file) => { l.Delete(file); return Results.Ok(); });
 
         // ---------- Synology ----------
@@ -161,7 +184,8 @@ public static class AtrilServer
 
         nas.MapGet("/status", (SynologyService s) => Results.Ok(s.Status()));
 
-        // Receives username and password from Atril's form. The password only lives in the server's memory.
+        // Receives username and password from Atril's form. The password stays in the server's memory and,
+        // only when "remember" is true, is also saved encrypted on this computer (CredentialStore).
         nas.MapPost("/connect", async (SynologyService s, ConnectRequest? r, CancellationToken ct) =>
         {
             await s.ConnectAsync(r ?? new(null, null, null, null), ct);
@@ -179,8 +203,17 @@ public static class AtrilServer
 
         // Downloads the book from the NAS into the local folder (if it's already there with the same size,
         // it isn't downloaded again) and returns it. The X-Atril-File header says the name it was saved under.
-        nas.MapGet("/book", async (SynologyService s, LocalLibrary l, string path, long? size, HttpContext ctx, CancellationToken ct) =>
+        // save=false: only passes the file through, without saving it. The page uses it to check first that the
+        // book isn't already in the library (title, author, ISBN, length...) and then saves it with POST /api/local/books.
+        nas.MapGet("/book", async (SynologyService s, LocalLibrary l, string path, long? size, bool? save, HttpContext ctx, CancellationToken ct) =>
         {
+            if (save == false)
+            {
+                var download = await s.DownloadAsync(path, ct);
+                ctx.Response.RegisterForDispose(download);
+                if (download.Content.Headers.ContentLength is long length) ctx.Response.ContentLength = length;
+                return Results.Stream(await download.Content.ReadAsStreamAsync(ct), "application/epub+zip");
+            }
             var name = LocalLibrary.SafeFileName(path);
             var existing = Path.Combine(l.Folder, name);
             string file;
@@ -197,6 +230,26 @@ public static class AtrilServer
         });
 
         nas.MapGet("/diagnostics", (SynologyService s) => Results.Ok(new { status = s.Status(), attempts = s.LastAttempts }));
+
+        // ---------- Updates (GitHub Releases) ----------
+        var updates = app.MapGroup("/api/update").AddEndpointFilter(async (ctx, next) =>
+        {
+            if (!Authorized(ctx.HttpContext)) return Results.StatusCode(403);
+            try { return await next(ctx); }
+            catch (UpdateException e) { return Results.Json(new { error = e.Message }, statusCode: 400); }
+        });
+
+        updates.MapGet("/check", async (UpdateService u, IOptions<UpdateOptions> uo, bool? force, CancellationToken ct) =>
+            Results.Ok(new { enabled = uo.Value.Enabled, info = await u.CheckAsync(force == true, ct) }));
+
+        // Downloads the new version and starts the script that installs it; then Atril closes and opens again
+        updates.MapPost("/install", async (UpdateService u, CancellationToken ct) =>
+        {
+            var version = await u.InstallAsync(ct);
+            if (o.Exit is { } exit)
+                _ = Task.Delay(TimeSpan.FromSeconds(1.5)).ContinueWith(_ => exit(), TaskScheduler.Default);
+            return Results.Ok(new { version, restarting = o.Exit != null });
+        });
 
         // Published browser version: open the browser on start ("OpenBrowser": false turns it off)
         if (!o.AppMode && !app.Environment.IsDevelopment() && app.Configuration.GetValue("OpenBrowser", true))

@@ -22,7 +22,7 @@ else
 fi
 
 # Files that must never be in the repository
-forbidden='(^|/)(appsettings\.Local\.json|appsettings\.[^/]*\.Local\.json|secrets\.json|\.env(\.[^/]*)?|[^/]*\.(pfx|p12|pem|key|snk|keystore)|synology-[^/]*\.txt|config\.json)$'
+forbidden='(^|/)(appsettings\.Local\.json|appsettings\.[^/]*\.Local\.json|secrets\.json|\.env(\.[^/]*)?|[^/]*\.(pfx|p12|pem|key|snk|keystore)|synology-[^/]*\.txt|config\.json|synology-login\.json)$'
 
 # Suspicious content (extended regular expressions; also catches common Spanish key names)
 patterns=(

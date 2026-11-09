@@ -37,7 +37,8 @@ sealed class MainWindow : Form
     {
         try
         {
-            server = await InternalServer.StartAsync();
+            // After an update is downloaded, the server asks the window to close so the update script can replace the files
+            server = await InternalServer.StartAsync(() => { if (!IsDisposed) BeginInvoke(new Action(Close)); });
 
             // Web view data (library, progress, settings) goes in the user's folder:
             // a Store app's install folder is read-only.

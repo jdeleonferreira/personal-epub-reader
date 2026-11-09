@@ -38,3 +38,6 @@ synology-*.txt
 *.epub
 *.mobi
 *.pdf
+# Saved Synology login (encrypted) and its keys, in case they get copied into the project
+synology-login.json
+keys/

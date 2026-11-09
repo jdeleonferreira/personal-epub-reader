@@ -6,6 +6,24 @@ Versions follow [semantic versioning](https://semver.org/): MAJOR.MINOR.PATCH.
 ## [Unreleased]
 
 ### Added
+- **Remember the Synology password** (optional, ticked by default in the sign-in form). It is saved encrypted in
+  `%LOCALAPPDATA%\Atril\synology-login.json` with ASP.NET Core Data Protection; on Windows its keys are protected with
+  DPAPI, tied to your Windows account. Atril signs in by itself when it starts. **Sign out** forgets it, and so does
+  a password the NAS rejects.
+- **Duplicate check** before adding or downloading a book. A book is already in the library when it has: the same file,
+  the same ISBN (ISBN-10 and ISBN-13 are compared), the same publisher identifier and title, or the same title and author
+  with the same length (estimated pages and number of sections). Atril says so and doesn't add it or download it again.
+  Books on the Synology are checked by name and size before downloading, and fully after downloading, before saving.
+- **Categories by knowledge area and topic** (e.g. *Computing & IT → Programming*), based on Thema, the international book
+  subject standard. Taken from the EPUB's subject codes (BISAC, Thema) or subject words when present; otherwise guessed
+  from the title, description and text (English and Spanish). Filter the library by area and change a book's area by hand.
+  Books already in the library are sorted automatically the first time.
+- **In-app updates.** Atril checks this project's GitHub Releases when it opens (and every 6 hours) and, when there's
+  a new version, shows what changed in every version since yours. In the Windows app, **Update now** downloads it,
+  checks it, installs it and opens Atril again (your books and settings are kept; if something fails, the previous
+  version is restored). The browser version links to the release page. **Check for updates** next to the version number.
+- `.github/workflows/release.yml`: every `vX.Y.Z` tag publishes a GitHub Release with the Windows app
+  (`Atril-Windows-x64.zip`, `Atril-Windows-arm64.zip`), the browser version and the notes from this CHANGELOG.
 - `windows/install.ps1`: builds the Windows app and installs it as a normal program, without the Microsoft Store
   (Start menu shortcut, "Open with" for `.epub` files, entry in Settings → Apps to uninstall).
 - Every GitHub Release includes a portable Windows app (`Atril-Windows-x64.zip`) that runs without installing.

@@ -78,6 +78,15 @@ button { font: inherit; color: inherit; }
 .rm:hover, .rm.confirm { color: var(--danger); }
 .tag { font-size: 11px; border: 1px solid var(--line); border-radius: 99px; padding: 0 7px; color: var(--muted); }
 .note { color: var(--muted); font-size: 13px; max-width: 65ch; }
+.meta .c { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.areas { display: flex; flex-wrap: wrap; gap: 6px; }
+.areas button { border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 3px 11px; font-size: 13px; cursor: pointer; }
+.areas button:hover { border-color: var(--accent); }
+.areas button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.areas button span { opacity: .7; font-variant-numeric: tabular-nums; margin-left: 4px; }
+select.cat { font: inherit; font-size: 12px; color: var(--muted); background: none; border: 1px solid transparent; border-radius: 6px; padding: 0 2px; flex: 1; min-width: 0; cursor: pointer; }
+select.cat:hover, select.cat:focus { border-color: var(--line); color: var(--ink); }
+.toast button { background: none; border: 0; color: inherit; font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; padding: 0 0 0 10px; }
 .empty { color: var(--muted); padding: 24px 0; }
 
 /* ---------- Reader ---------- */
@@ -140,6 +149,31 @@ button { font: inherit; color: inherit; }
 .ver { font-size: 11px; border: 1px solid var(--line); border-radius: 99px; padding: 0 7px; margin-left: 4px; vertical-align: 1px; font-variant-numeric: tabular-nums; }
 .ver:empty { display: none; }
 
+/* ---------- Updates ---------- */
+.upd-link { background: none; border: 0; padding: 0 2px; margin-left: 6px; font: inherit; font-size: 12px; color: var(--muted); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.upd-link:hover { color: var(--ink); }
+.upd-chip { font: inherit; font-size: 12px; font-weight: 600; margin-left: 6px; border: 1px solid var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); border-radius: 99px; padding: 1px 9px; cursor: pointer; vertical-align: 1px; }
+.upd-chip:hover { background: var(--accent); color: var(--accent-ink); }
+#updDlg { border: 1px solid var(--line); border-radius: var(--radius); padding: 0; width: min(600px, calc(100vw - 32px)); max-height: min(80vh, 720px); background: var(--surface); color: var(--ink); box-shadow: 0 24px 60px -20px rgb(0 0 0 / .45); }
+#updDlg[open] { display: flex; flex-direction: column; }
+#updDlg::backdrop { background: rgb(10 14 20 / .45); }
+.upd-sum { padding: 14px 18px 4px; margin: 0; color: var(--muted); font-size: 14px; }
+.upd-sum b { color: var(--ink); }
+.upd-notes { overflow: auto; flex: 1; padding: 4px 18px 14px; font-size: 14px; }
+.upd-notes section + section { border-top: 1px solid var(--line); margin-top: 10px; }
+.upd-notes h3 { font-size: 15px; margin: 12px 0 2px; display: flex; gap: 8px; align-items: baseline; }
+.upd-notes h3 small { color: var(--muted); font-weight: 400; font-size: 12px; }
+.upd-notes h4 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 10px 0 4px; }
+.upd-notes ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+.upd-notes p { margin: 6px 0; }
+.upd-notes code { background: var(--bg); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+.upd-notes a { color: var(--accent); }
+.upd-foot { display: flex; align-items: center; gap: 8px; padding: 12px 18px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+.upd-foot a.btn { text-decoration: none; color: var(--ink); }
+.upd-foot a.btn.primary { color: var(--accent-ink); }
+.upd-foot .msg { flex: 1; min-width: 180px; font-size: 13px; color: var(--muted); }
+.upd-foot .msg.err { color: var(--danger); }
+
 /* ---------- Synology ---------- */
 #nasDlg { border: 1px solid var(--line); border-radius: var(--radius); padding: 0; width: min(640px, calc(100vw - 32px)); max-height: min(78vh, 720px); background: var(--surface); color: var(--ink); box-shadow: 0 24px 60px -20px rgb(0 0 0 / .45); }
 #nasDlg[open] { display: flex; flex-direction: column; }
@@ -174,10 +208,13 @@ button { font: inherit; color: inherit; }
 .login .hint { font-size: 12px; color: var(--muted); }
 .login .err { color: var(--danger); font-size: 13px; }
 .login .btn { justify-content: center; }
+.login label.check { flex-direction: row; align-items: center; gap: 8px; color: var(--ink); }
 .nas-out { background: none; border: 0; font: inherit; font-size: 12px; color: var(--muted); cursor: pointer; padding: 4px 6px; border-radius: 6px; }
 .nas-out:hover { color: var(--ink); background: var(--bg); }
 .nas-foot { padding: 10px 16px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 10px; min-height: 20px; }
 .nas-foot .bar { max-width: 200px; height: 4px; }
+.nas-foot .dup { flex: 1; color: var(--ink); }
+.nas-foot .btn { padding: 4px 10px; font-size: 13px; }
 .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 9px 16px; border-radius: 8px; font-size: 13px; z-index: 50; max-width: calc(100vw - 32px); }
 
 @media (max-width: 560px) {
@@ -196,7 +233,7 @@ button { font: inherit; color: inherit; }
   <header class="lib-head">
     <div class="brand">
       <h1>Atril</h1>
-      <p>Your EPUB library, in the browser and on your PC. <span class="ver" id="appVer"></span></p>
+      <p>Your EPUB library, in the browser and on your PC. <span class="ver" id="appVer"></span><button class="upd-chip" id="updChip" type="button" hidden></button><button class="upd-link" id="updCheck" type="button" hidden>Check for updates</button></p>
     </div>
     <div class="actions">
       <button class="btn primary" id="openBtn" type="button">
@@ -221,6 +258,7 @@ button { font: inherit; color: inherit; }
 
   <section style="display:flex;flex-direction:column;gap:14px">
     <div class="shelf-label" id="shelfLabel">Library</div>
+    <nav class="areas" id="areas" aria-label="Knowledge areas" hidden></nav>
     <div class="grid" id="grid"></div>
   </section>
 
@@ -321,10 +359,26 @@ button { font: inherit; color: inherit; }
   <div class="nas-foot" id="nasFoot"></div>
 </dialog>
 
+<dialog id="updDlg" aria-labelledby="updTitle">
+  <div class="nas-head">
+    <h2 id="updTitle">Update Atril</h2>
+    <button class="nas-x" id="updClose" type="button" aria-label="Close">×</button>
+  </div>
+  <p class="upd-sum" id="updSum"></p>
+  <div class="upd-notes" id="updNotes"></div>
+  <div class="upd-foot">
+    <span class="msg" id="updMsg" role="status"></span>
+    <button class="btn" id="updLater" type="button">Later</button>
+    <a class="btn" id="updPage" href="#" target="_blank" rel="noopener">Release page</a>
+    <button class="btn primary" id="updNow" type="button">Update now</button>
+  </div>
+</dialog>
+
 <div class="toast" id="toast" hidden role="status"></div>
 
 <script src="lib/jszip.min.js"></script>
 <script src="lib/epub.min.js"></script>
+<script src="catalog.js"></script>
 <script>
 (() => {
   const $ = (id) => document.getElementById(id);
@@ -380,7 +434,12 @@ button { font: inherit; color: inherit; }
   }
   async function delBook(id) { memBooks.delete(id); ls.del("pos:" + id); if (persistent) { try { await tx("readwrite", s => s.delete(id)); } catch {} } }
 
-  function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(() => t.hidden = true, 2600); }
+  // action: optional { label, fn } shown as a button inside the message
+  function toast(msg, action) {
+    const t = $("toast"); t.textContent = msg;
+    if (action) { const b = document.createElement("button"); b.type = "button"; b.textContent = action.label; b.onclick = () => { t.hidden = true; action.fn(); }; t.appendChild(b); }
+    t.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(() => t.hidden = true, action ? 8000 : 2600);
+  }
 
   /* ---------- Sample book (generated so the library never opens empty) ---------- */
   async function makeSample() {
@@ -443,9 +502,31 @@ button { font: inherit; color: inherit; }
   async function dropRecord(id) { memBooks.delete(id); if (persistent) { try { await tx("readwrite", s => s.delete(id)); } catch {} } }
   const fileName = f => f.split("/").pop();
 
-  async function importBuffer(buf, fallbackName, fixedId, extra) {
+  /* ---------- Duplicates and categories (catalog.js) ---------- */
+  class DuplicateBook extends Error {
+    constructor(existing, reason) { super(`“${existing.title}” is already in your library (${reason}).`); this.existing = existing; this.reason = reason; }
+  }
+  // Signature (to compare with other books) and category of an EPUB
+  async function describe(buf) {
+    try { const a = await AtrilCatalog.analyze(buf); return { sig: AtrilCatalog.signature(a, buf.byteLength), cat: AtrilCatalog.categorize(a) }; }
+    catch (e) { console.warn("Couldn't analyze the book", e); return { sig: { v: AtrilCatalog.version, size: buf.byteLength, broken: true }, cat: { area: "other", topic: null, source: "content" } }; }
+  }
+  function findDuplicate(id, sig) {
+    for (const b of memBooks.values()) {
+      if (b.sample) continue;
+      if (b.id === id) return new DuplicateBook(b, "an identical copy of the file");
+      const why = b.sig && !b.sig.broken && !sig.broken ? AtrilCatalog.sameBook(sig, b.sig) : null;
+      if (why) return new DuplicateBook(b, why);
+    }
+    return null;
+  }
+
+  // opts.checkDuplicates: refuse a book that is already in the library (throws DuplicateBook, nothing is saved).
+  // opts.save: how to store the file in the books folder (default: upload it to the server).
+  async function importBuffer(buf, fallbackName, fixedId, extra, opts = {}) {
     const id = fixedId || await hashId(buf);
     const prev = memBooks.get(id);
+    if (prev && opts.checkDuplicates && !prev.sample) throw new DuplicateBook(prev, "an identical copy of the file");
     if (prev) {
       let changed = false;
       if (extra && extra.nas && prev.nas !== extra.nas) { prev.nas = extra.nas; changed = true; }
@@ -456,12 +537,14 @@ button { font: inherit; color: inherit; }
       if (changed) await putBook(prev);
       return prev;
     }
+    const info = fixedId ? { sig: null, cat: null } : await describe(buf);
+    if (opts.checkDuplicates) { const dup = findDuplicate(id, info.sig); if (dup) throw dup; }
     const book = ePub(buf.slice(0), { replacements: "blobUrl" });
     await book.ready.catch(() => {});
     const md = await book.loaded.metadata;
     let file = extra && extra.file || null;
-    if (!file && loc.enabled && !fixedId) file = await saveLocal(buf, fallbackName);
-    const rec = { id, title: md.title || fallbackName.replace(/\.epub$/i, ""), author: md.creator || "", cover: await thumb(book), added: Date.now(), sample: id === SAMPLE_ID, ...(extra || {}), file, data: file ? null : buf };
+    if (!file && loc.enabled && !fixedId) file = await (opts.save || saveLocal)(buf, fallbackName);
+    const rec = { id, title: md.title || fallbackName.replace(/\.epub$/i, ""), author: md.creator || "", cover: await thumb(book), added: Date.now(), sample: id === SAMPLE_ID, sig: info.sig, cat: info.cat, ...(extra || {}), file, data: file ? null : buf };
     // Wait for epub.js to finish preparing its resources before destroying the book
     await Promise.race([book.opened, new Promise(r => setTimeout(r, 10000))]).catch(() => {});
     book.destroy();
@@ -471,13 +554,21 @@ button { font: inherit; color: inherit; }
   async function importFiles(files) {
     const list = [...files].filter(f => /\.epub$/i.test(f.name) || f.type === "application/epub+zip");
     if (!list.length) { toast("Only .epub files can be opened"); return; }
-    let last;
+    let last, added = 0; const dups = [];
     for (const f of list) {
-      try { last = await importBuffer(await f.arrayBuffer(), f.name); }
-      catch (e) { console.error(e); toast(`Couldn't read "${f.name}". Check that it's a valid EPUB.`); }
+      try { last = await importBuffer(await f.arrayBuffer(), f.name, null, null, { checkDuplicates: true }); added++; }
+      catch (e) {
+        if (e instanceof DuplicateBook) dups.push(e);
+        else { console.error(e); toast(`Couldn't read "${f.name}". Check that it's a valid EPUB.`); }
+      }
     }
     await renderLibrary();
-    if (list.length === 1 && last) openBook(last.id);
+    if (dups.length === 1 && !added) toast(dups[0].message + " It wasn't added again.", { label: "Open it", fn: () => openBook(dups[0].existing.id) });
+    else if (dups.length) {
+      const names = dups.slice(0, 3).map(d => `“${d.existing.title}”`).join(", ") + (dups.length > 3 ? "…" : "");
+      toast(`${plural(dups.length, "book was", "books were")} already in your library and weren't added again: ${names}` + (added ? ` · ${plural(added, "book", "books")} added` : ""));
+    }
+    else if (list.length === 1 && last) openBook(last.id);
     else if (last) toast(`${list.length} books added`);
   }
 
@@ -489,21 +580,47 @@ button { font: inherit; color: inherit; }
     const [a, z] = palettes[h % palettes.length];
     return `<div class="gen" style="background:linear-gradient(160deg,${a},${z})"><b></b><span></span></div>`;
   }
+  const areaOptions = AtrilCatalog.AREAS.map(a => `<option value="${a.id}">${a.label}</option>`).join("");
+  function renderAreas(books) {
+    const counts = new Map();
+    for (const b of books) if (b.cat) counts.set(b.cat.area, (counts.get(b.cat.area) || 0) + 1);
+    let current = ls.get("area", "all");
+    if (current !== "all" && !counts.has(current)) current = "all";
+    const nav = $("areas"); nav.innerHTML = ""; nav.hidden = !counts.size;
+    const chip = (id, label, n) => {
+      const b = document.createElement("button"); b.type = "button"; b.setAttribute("aria-pressed", String(id === current));
+      b.textContent = label; b.insertAdjacentHTML("beforeend", `<span>${n}</span>`);
+      b.onclick = () => { ls.set("area", id); renderLibrary(); };
+      nav.appendChild(b);
+    };
+    chip("all", "All", books.length);
+    [...counts].sort((a, b) => (a[0] === "other") - (b[0] === "other") || b[1] - a[1]).forEach(([id, n]) => chip(id, AtrilCatalog.areaLabel(id), n));
+    return current === "all" ? books : books.filter(b => b.cat && b.cat.area === current);
+  }
   async function renderLibrary() {
-    const books = await allBooks();
+    const all = await allBooks();
     const g = $("grid"); g.innerHTML = "";
-    $("shelfLabel").textContent = books.length ? `Library · ${plural(books.length, "book", "books")}` : "Library";
-    if (!books.length) { g.innerHTML = `<div class="empty">No books yet. Open your first EPUB.</div>`; return; }
+    $("shelfLabel").textContent = all.length ? `Library · ${plural(all.length, "book", "books")}` : "Library";
+    const books = renderAreas(all);
+    if (!all.length) { g.innerHTML = `<div class="empty">No books yet. Open your first EPUB.</div>`; return; }
     for (const b of books) {
       const pos = ls.get("pos:" + b.id, null); const pct = pos && pos.pct != null ? Math.round(pos.pct * 100) : 0;
       const el = document.createElement("article"); el.className = "book";
       el.innerHTML = `
         <button class="cover" type="button" aria-label="Read">${b.cover ? `<img alt="" src="${b.cover}">` : genCover(b)}</button>
-        <div class="meta"><span class="t"></span><span class="a"></span></div>
+        <div class="meta"><span class="t"></span><span class="a"></span><span class="c"></span></div>
         <div class="prog"><span class="bar"><i style="width:${pct}%"></i></span><span>${pos ? pct + "%" : "New"}</span></div>
-        <div style="display:flex;gap:8px;align-items:center">${b.sample ? '<span class="tag">Sample</span>' : ""}${b.nas ? '<span class="tag">NAS</span>' : ""}<button class="rm" type="button">Delete</button></div>`;
+        <div style="display:flex;gap:8px;align-items:center">${b.sample ? '<span class="tag">Sample</span>' : ""}${b.nas ? '<span class="tag">NAS</span>' : ""}${b.cat ? `<select class="cat" aria-label="Category" title="Change the category">${areaOptions}</select>` : ""}<button class="rm" type="button">Delete</button></div>`;
       el.querySelector(".t").textContent = b.title;
       el.querySelector(".a").textContent = b.author || "Unknown author";
+      if (b.cat) {
+        // Topic under the author; the knowledge area is the selector next to "Delete"
+        el.querySelector(".c").textContent = b.cat.topic || "";
+        el.querySelector("select.cat").title = b.cat.source === "manual" ? "Category chosen by you" : b.cat.source === "metadata" ? "Category from the book's subjects" : "Category guessed from the book's content";
+        el.querySelector("select.cat").title += ". Change it here.";
+        const sel = el.querySelector("select.cat"); sel.value = b.cat.area;
+        sel.onchange = async () => { b.cat = { area: sel.value, topic: sel.value === b.cat.area ? b.cat.topic : null, source: "manual" }; await putBook(b); renderLibrary(); };
+      }
       el.querySelector(".cover").setAttribute("aria-label", "Read " + b.title);
       const gen = el.querySelector(".gen"); if (gen) { gen.querySelector("b").textContent = b.title; gen.querySelector("span").textContent = b.author; }
       el.querySelector(".cover").onclick = () => openBook(b.id);
@@ -666,8 +783,9 @@ button { font: inherit; color: inherit; }
   function nasFoot(html) { $("nasFoot").innerHTML = html || ""; }
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
-  // Username and password are asked here. The password only travels to the Atril server (on this computer),
-  // which keeps it in memory while it runs. The browser only remembers the QuickConnect ID and the username.
+  // Username and password are asked here. The password only travels to the Atril server (on this computer).
+  // With "Remember password" ticked, the server saves it encrypted in the user's app data folder (never in the
+  // browser); otherwise it only lives in the server's memory. The browser only remembers the QuickConnect ID and the username.
   let pending = null; // form data while waiting for the 2FA code
   async function nasOpen() {
     $("nasDlg").showModal(); nasFoot("");
@@ -676,12 +794,15 @@ button { font: inherit; color: inherit; }
     try {
       const st = await (await nasApi("/status")).json();
       nasStatus(st);
-      if (st.connected) await nasList(st.root); else nasLogin(st);
+      if (st.connected) await nasList(st.root);
+      else if (st.remembered) await nasConnect({}, null, "Signing in with your saved password…");
+      else nasLogin(st);
     } catch (e) { nasError(e); }
   }
   function nasStatus(st) {
     nas.connected = st.connected; nas.root = st.root; nas.st = st;
     $("nasOut").hidden = !st.connected;
+    $("nasOut").title = st.remembered ? "Sign out and forget the saved password" : "Sign out";
     $("nasVia").textContent = st.connected ? `${st.username} · ${st.via === "QuickConnect" ? "QuickConnect" : "direct connection"}` : "";
     if (!st.connected) nas.path = null;
   }
@@ -695,24 +816,30 @@ button { font: inherit; color: inherit; }
       ${st.fixedAddress ? "" : `<label>QuickConnect ID<input id="lgQc" name="quickconnect" required autocapitalize="off" spellcheck="false" placeholder="mynas"><span class="hint">The part before .quickconnect.to</span></label>`}
       <label>DSM username<input id="lgUser" name="username" autocomplete="username" required autocapitalize="off" spellcheck="false"></label>
       <label>Password<input id="lgPass" name="password" type="password" autocomplete="current-password" required></label>
+      <label class="check"><input type="checkbox" id="lgRemember"> Remember password on this computer</label>
       ${error ? `<div class="err" role="alert"></div>` : ""}
       <button class="btn primary" type="submit">Sign in</button>
-      <span class="hint">Your password isn't stored in the browser. You'll be asked again when Atril restarts.</span>
+      <span class="hint" id="lgHint"></span>
     </form>`;
     if ($("lgQc")) $("lgQc").value = qc;
     $("lgUser").value = user;
+    const hint = () => $("lgHint").textContent = $("lgRemember").checked
+      ? "The password is saved encrypted on this computer, protected by your user account. Sign out to forget it."
+      : "The password isn't saved. You'll be asked again when Atril restarts.";
+    $("lgRemember").checked = ls.get("nasRemember", true); hint();
+    $("lgRemember").onchange = hint;
     if (error) $("loginForm").querySelector(".err").textContent = error;
     (($("lgQc") && !qc) ? $("lgQc") : !user ? $("lgUser") : $("lgPass")).focus();
     $("loginForm").onsubmit = ev => {
       ev.preventDefault();
-      const d = { quickConnectId: $("lgQc") ? $("lgQc").value.trim() : null, username: $("lgUser").value.trim(), password: $("lgPass").value };
-      ls.set("nasUsername", d.username); if (d.quickConnectId) ls.set("nasQuickConnectId", d.quickConnectId);
+      const d = { quickConnectId: $("lgQc") ? $("lgQc").value.trim() : null, username: $("lgUser").value.trim(), password: $("lgPass").value, remember: $("lgRemember").checked };
+      ls.set("nasUsername", d.username); ls.set("nasRemember", d.remember); if (d.quickConnectId) ls.set("nasQuickConnectId", d.quickConnectId);
       nasConnect(d);
     };
   }
-  async function nasConnect(data, otp) {
+  async function nasConnect(data, otp, msg) {
     pending = data;
-    nasMsg(otp ? "Checking code…" : (nas.st && nas.st.fixedAddress ? "Connecting to the NAS…" : "Finding your NAS through QuickConnect… (this can take a few seconds)"));
+    nasMsg(otp ? "Checking code…" : msg || (nas.st && nas.st.fixedAddress ? "Connecting to the NAS…" : "Finding your NAS through QuickConnect… (this can take a few seconds)"));
     try {
       const st = await (await nasApi("/connect", { method: "POST", body: JSON.stringify({ ...data, otp: otp || null }) })).json();
       pending = null; nasStatus(st); await nasList(st.root);
@@ -753,13 +880,13 @@ button { font: inherit; color: inherit; }
     try {
       const d = await (await nasApi("/folders?path=" + encodeURIComponent(path))).json();
       nas.path = d.path; nas.root = d.root;
-      const inLibrary = new Set((await allBooks()).map(b => b.nas).filter(Boolean));
+      const books = await allBooks();
       if (!d.entries.length) { $("nasBody").innerHTML = '<div class="nas-msg">No EPUB books or folders here.</div>'; return; }
       const ul = document.createElement("ul"); ul.className = "nas-list";
       for (const e of d.entries) {
         const li = document.createElement("li"), b = document.createElement("button"); b.type = "button";
         b.className = e.isFolder ? "dir" : "file";
-        b.innerHTML = `${e.isFolder ? ico.dir : ico.book}<span class="n"></span>${!e.isFolder && inLibrary.has(e.path) ? '<span class="ok">In library</span>' : ""}<span class="s">${e.isFolder ? "" : fmtSize(e.size)}</span>`;
+        b.innerHTML = `${e.isFolder ? ico.dir : ico.book}<span class="n"></span>${!e.isFolder && knownNasFile(books, e) ? '<span class="ok">In library</span>' : ""}<span class="s">${e.isFolder ? "" : fmtSize(e.size)}</span>`;
         b.querySelector(".n").textContent = e.name; b.title = e.name;
         b.onclick = () => e.isFolder ? nasList(e.path) : nasDownload(e);
         li.appendChild(b); ul.appendChild(li);
@@ -769,15 +896,29 @@ button { font: inherit; color: inherit; }
       nasFoot(`${plural(nb, "book", "books")} · ${plural(nf, "folder", "folders")}`);
     } catch (e) { nasError(e); }
   }
+  // Quick check before downloading: the same NAS file, or a book with the same file name and size
+  function knownNasFile(books, e) {
+    const key = n => AtrilCatalog.titleKeys(fileName(n).replace(/\.epub$/i, "").replace(/\s\(\d+\)$/, "")).full;
+    const hit = books.find(b => b.nas === e.path);
+    if (hit) return { rec: hit, reason: "it's the same file on the NAS" };
+    const k = key(e.name);
+    const same = books.find(b => !b.sample && b.sig && b.sig.size === e.size && [b.file, b.nas, ...(b.copies || [])].filter(Boolean).some(f => key(f) === k));
+    return same ? { rec: same, reason: "same file name and size" } : null;
+  }
+  function nasDuplicate(rec, reason) {
+    nasFoot(`<span class="dup" role="alert"></span><button class="btn" type="button" id="nasOpenDup">Open it</button>`);
+    $("nasFoot").querySelector(".dup").textContent = `“${rec.title}” is already in your library (${reason}). It won't be downloaded again.`;
+    $("nasOpenDup").onclick = () => { $("nasDlg").close(); openBook(rec.id); };
+  }
   async function nasDownload(e) {
-    const existing = (await allBooks()).find(b => b.nas === e.path);
-    if (existing) { $("nasDlg").close(); return openBook(existing.id); }
+    const known = knownNasFile(await allBooks(), e);
+    if (known) return nasDuplicate(known.rec, known.reason);
     if (nas.busy) return; nas.busy = true;
     const progress = n => nasFoot(`<span>Downloading “${esc(e.name)}”</span><span class="bar"><i style="width:${n}%"></i></span><span>${n}%</span>`);
     progress(0);
     try {
-      const r = await nasApi("/book?path=" + encodeURIComponent(e.path) + "&size=" + e.size);
-      const file = r.headers.get("X-Atril-File") ? decodeURIComponent(r.headers.get("X-Atril-File")) : null;
+      // save=false: the server only passes the file through; it is saved after checking it isn't a duplicate
+      const r = await nasApi("/book?save=false&path=" + encodeURIComponent(e.path) + "&size=" + e.size);
       const total = +r.headers.get("Content-Length") || e.size || 0;
       const reader = r.body.getReader(), chunks = []; let received = 0;
       for (;;) {
@@ -786,11 +927,19 @@ button { font: inherit; color: inherit; }
         if (total) progress(Math.min(100, Math.round(received / total * 100)));
       }
       const buf = new Uint8Array(received); let o = 0; for (const c of chunks) { buf.set(c, o); o += c.length; }
-      nasFoot("Preparing the book…");
-      const rec = await importBuffer(buf.buffer, e.name, null, { nas: e.path, ...(file ? { file } : {}) });
+      nasFoot("Checking the book…");
+      const rec = await importBuffer(buf.buffer, e.name, null, { nas: e.path }, { checkDuplicates: true });
       nas.busy = false; $("nasDlg").close();
       await renderLibrary(); openBook(rec.id);
-    } catch (err) { nas.busy = false; nasFoot(""); if (err.needsOtp) nasError(err); else toast(err.message); }
+    } catch (err) {
+      nas.busy = false; nasFoot("");
+      if (err instanceof DuplicateBook) {
+        // Remember the NAS file so next time it's recognised without downloading it
+        if (!err.existing.nas) { err.existing.nas = e.path; await putBook(err.existing); await nasList(nas.path); }
+        nasDuplicate(err.existing, err.reason);
+      }
+      else if (err.needsOtp) nasError(err); else toast(err.message);
+    }
   }
   $("nasBtn").onclick = nasOpen;
   $("nasClose").onclick = () => $("nasDlg").close();
@@ -828,6 +977,21 @@ button { font: inherit; color: inherit; }
       if (changed && !$("library").hidden) await renderLibrary();
     } catch (e) { console.warn(e); }
     finally { loc.syncing = false; }
+  }
+
+  // Books added by earlier versions (or before catalog.js changed) get their signature and category
+  async function catalogLibrary() {
+    const todo = (await allBooks()).filter(b => !b.sample && (!b.sig || b.sig.v !== AtrilCatalog.version));
+    for (let i = 0; i < todo.length; i++) {
+      const b = todo[i];
+      if (todo.length > 2) toast(`Sorting your library by topic… ${i + 1} of ${todo.length}`);
+      try {
+        const info = await describe(await loadData(b));
+        b.sig = info.sig; if (!b.cat || b.cat.source !== "manual") b.cat = info.cat;
+        await putBook(b);
+      } catch (e) { console.warn("Couldn't catalog", b.title, e); }
+    }
+    if (todo.length && !$("library").hidden) await renderLibrary();
   }
 
   const dir = { path: null, parent: null };
@@ -900,15 +1064,119 @@ button { font: inherit; color: inherit; }
   async function openExternalFile(path) {
     try {
       if (!$("reader").hidden) await closeReader();
-      const { file } = await (await localApi("/import", { method: "POST", json: { path } })).json();
-      const buf = await (await localApi("/book?file=" + encodeURIComponent(file))).arrayBuffer();
-      const rec = await importBuffer(buf, fileName(file), null, { file });
+      // Read it first; it's only copied into the books folder if it isn't already in the library
+      const buf = await (await localApi("/external?path=" + encodeURIComponent(path))).arrayBuffer();
+      const importIt = async () => (await (await localApi("/import", { method: "POST", json: { path } })).json()).file;
+      const rec = await importBuffer(buf, fileName(path.replace(/\\/g, "/")), null, null, { checkDuplicates: true, save: importIt });
       await renderLibrary(); openBook(rec.id);
-    } catch (e) { toast(e.message); }
+    } catch (e) {
+      if (e instanceof DuplicateBook) { await renderLibrary(); openBook(e.existing.id); toast(e.message + " Opening your copy."); }
+      else toast(e.message);
+    }
   }
 
   /* ---------- Version ---------- */
   fetch("/api/health").then(r => r.ok ? r.json() : null).then(j => { if (j && j.version) $("appVer").textContent = "v" + j.version; }).catch(() => {});
+
+  /* ---------- Updates ----------
+     The Atril server looks for new versions in the project's GitHub Releases (/api/update/check).
+     The Windows app can download and install them (/api/update/install): it closes and opens again
+     with the new version. The browser version links to the release page. */
+  const upd = { info: null, busy: false };
+  async function updateApi(path, opts = {}) {
+    const r = await fetch("/api/update" + path, { method: opts.method || "GET", headers: { "X-Atril": "1" } });
+    let j = {}; try { j = await r.json(); } catch {}
+    if (!r.ok) throw new Error(j.error || `Error ${r.status}`);
+    return j;
+  }
+  // Release notes (Markdown from the CHANGELOG) → safe HTML: headings, lists, bold, italics, code and links
+  function mdInline(t) {
+    return esc(t)
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
+      .replace(/(^|[^*\w])\*([^*\s][^*]*)\*/g, "$1<i>$2</i>")
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (m, txt, url) => `<a href="${url}" target="_blank" rel="noopener">${txt}</a>`);
+  }
+  function mdToHtml(md) {
+    const out = []; let list = null, para = null;
+    const flush = () => { if (para) { out.push(`<p>${mdInline(para)}</p>`); para = null; } if (list) { out.push(`<ul>${list.map(i => `<li>${mdInline(i)}</li>`).join("")}</ul>`); list = null; } };
+    for (const raw of String(md || "").replace(/\r/g, "").split("\n")) {
+      const line = raw.trimEnd();
+      let m;
+      if (!line.trim()) { flush(); continue; }
+      if ((m = line.match(/^#{1,6}\s+(.*)$/))) { flush(); out.push(`<h4>${mdInline(m[1])}</h4>`); continue; }
+      if ((m = line.match(/^\s{0,3}[-*+]\s+(.*)$/))) { if (para) { const l = list; list = null; flush(); list = l; } (list ||= []).push(m[1]); continue; }
+      if (list && /^\s+\S/.test(line)) { list[list.length - 1] += " " + line.trim(); continue; }
+      if (list) flush();
+      para = para ? para + " " + line.trim() : line.trim();
+    }
+    flush();
+    return out.join("") || `<p>${esc("No notes for this version.")}</p>`;
+  }
+
+  function showUpdate(info) {
+    const n = info.releases.length;
+    $("updTitle").textContent = `Atril ${info.latest} is available`;
+    $("updSum").innerHTML = `You have <b>v${esc(info.current)}</b>. ` + (n > 1 ? `What's new in the ${n} versions since then:` : "What's new:");
+    $("updNotes").innerHTML = info.releases.map(r =>
+      `<section><h3>v${esc(r.version)}${r.date ? ` <small>${esc(r.date)}</small>` : ""}</h3>${mdToHtml(r.notes)}</section>`).join("");
+    $("updPage").href = info.url || "#";
+    $("updNow").hidden = !info.canInstall;
+    $("updPage").classList.toggle("primary", !info.canInstall);
+    const msg = $("updMsg"); msg.className = "msg";
+    msg.textContent = info.canInstall ? "Atril will close and open again. Your books and settings are kept." : (info.installNote || "");
+    $("updNow").disabled = false; $("updLater").disabled = false;
+    if (!$("updDlg").open) $("updDlg").showModal();
+  }
+  function setChip(info) {
+    const c = $("updChip");
+    c.hidden = !(info && info.available);
+    if (!c.hidden) c.textContent = `Update to v${info.latest}`;
+  }
+  // manual: the user pressed "Check for updates" (always answers); otherwise only speaks up for a version not dismissed with "Later"
+  async function checkUpdates(manual) {
+    if (upd.busy) return;
+    upd.busy = true;
+    if (manual) $("updCheck").textContent = "Checking…";
+    try {
+      const { enabled, info } = await updateApi("/check" + (manual ? "?force=true" : ""));
+      $("updCheck").hidden = false;
+      if (info.lastUpdate) {
+        if (info.lastUpdate.ok) toast(`Atril was updated to v${info.lastUpdate.version}.`);
+        else toast("The update couldn't be installed: " + (info.lastUpdate.error || "unknown error") + " Atril is still on v" + info.current + ".");
+      }
+      if (!enabled && !manual) return;
+      upd.info = info; setChip(info);
+      if (info.error) { if (manual) toast(info.error); return; }
+      if (!info.available) { if (manual) toast(`Atril v${info.current} is the newest version.`); return; }
+      if (manual || ls.get("updSkip", null) !== info.latest) showUpdate(info);
+    } catch (e) {
+      if (manual) toast(e.message); // without the Atril server (plain web page) there's nothing to check
+    } finally {
+      upd.busy = false;
+      $("updCheck").textContent = "Check for updates";
+    }
+  }
+  $("updCheck").onclick = () => checkUpdates(true);
+  $("updChip").onclick = () => upd.info && showUpdate(upd.info);
+  $("updClose").onclick = () => $("updDlg").close();
+  $("updLater").onclick = () => { if (upd.info) ls.set("updSkip", upd.info.latest); $("updDlg").close(); };
+  $("updDlg").addEventListener("cancel", e => { if ($("updNow").dataset.running) e.preventDefault(); });
+  $("updNow").onclick = async () => {
+    const btn = $("updNow"), msg = $("updMsg");
+    btn.disabled = true; $("updLater").disabled = true; btn.dataset.running = "1";
+    msg.className = "msg"; msg.textContent = `Downloading Atril ${upd.info.latest}…`;
+    try {
+      if (!$("reader").hidden) await closeReader(); // saves the reading position first
+      const r = await updateApi("/install", { method: "POST" });
+      msg.textContent = r.restarting ? `Installing v${r.version}. Atril will open again in a few seconds…` : `v${r.version} is ready: close Atril to finish installing it.`;
+    } catch (e) {
+      msg.className = "msg err"; msg.textContent = e.message;
+      btn.disabled = false; $("updLater").disabled = false; delete btn.dataset.running;
+    }
+  };
+  setTimeout(() => checkUpdates(false), 4000);
+  setInterval(() => checkUpdates(false), 6 * 3600 * 1000);
 
   /* ---------- Boot ---------- */
   (async () => {
@@ -922,6 +1190,7 @@ button { font: inherit; color: inherit; }
     await renderLibrary();
     if (app) app.postMessage({ type: "ready" });
     await syncFolder();
+    await catalogLibrary();
   })();
 })();
 </script>

@@ -27,8 +27,8 @@ public sealed class SynologyException(string message, int code = 0, bool needsOt
     public bool NeedsLogin { get; } = needsLogin;
 }
 
-/// <summary>What the user types in Atril's sign-in form.</summary>
-public sealed record ConnectRequest(string? QuickConnectId, string? Username, string? Password, string? Otp);
+/// <summary>What the user types in Atril's sign-in form. <c>Remember</c>: keep the password (encrypted) on this computer.</summary>
+public sealed record ConnectRequest(string? QuickConnectId, string? Username, string? Password, string? Otp, bool? Remember = null);
 
 public sealed record NasEntry(string Name, string Path, bool IsFolder, long Size);
 
@@ -38,13 +38,15 @@ public sealed record NasEntry(string Name, string Path, bool IsFolder, long Size
 /// → SYNO.FileStation.List / SYNO.FileStation.Download using _sid.
 /// </summary>
 public sealed class SynologyService(
-    HttpClient http, QuickConnectResolver resolver,
+    HttpClient http, QuickConnectResolver resolver, CredentialStore store,
     Microsoft.Extensions.Options.IOptionsMonitor<SynologyOptions> options, ILogger<SynologyService> log)
 {
     readonly SemaphoreSlim gate = new(1, 1);
     string? baseUrl, sid;
-    // Credentials live only in memory: they are gone when the server stops. Used to renew an expired session.
+    // Credentials in memory, used to renew an expired session. The password is only written to disk
+    // (encrypted, see CredentialStore) when the user ticks "Remember password".
     string? target, username, password;
+    bool savedLoaded;
     Dictionary<string, (string Path, int Max)> apis = new();
     public List<QuickConnectResolver.Attempt> LastAttempts { get; private set; } = [];
 
@@ -58,7 +60,8 @@ public sealed class SynologyService(
         fixedAddress = O.Url.Length > 0,
         address = baseUrl,
         root = Root,
-        via = O.Url.Length > 0 ? "direct" : "QuickConnect"
+        via = O.Url.Length > 0 ? "direct" : "QuickConnect",
+        remembered = store.HasSaved
     };
 
     // ---------- Connection ----------
@@ -68,24 +71,40 @@ public sealed class SynologyService(
         await gate.WaitAsync(ct);
         try
         {
-            if (!string.IsNullOrWhiteSpace(r.Username) && !string.IsNullOrEmpty(r.Password))
+            var typed = !string.IsNullOrWhiteSpace(r.Username) && !string.IsNullOrEmpty(r.Password);
+            if (!typed && password is null && !savedLoaded && store.Load() is { } saved)
+            {
+                // Server just started: use the password the user asked to remember
+                savedLoaded = true;
+                target = string.IsNullOrWhiteSpace(saved.QuickConnectId) ? O.QuickConnectId : QuickConnectResolver.NormalizeId(saved.QuickConnectId);
+                username = saved.Username; password = saved.Password;
+            }
+            if (typed)
             {
                 var newTarget = string.IsNullOrWhiteSpace(r.QuickConnectId) ? O.QuickConnectId : QuickConnectResolver.NormalizeId(r.QuickConnectId);
                 if (O.Url.Length == 0 && string.IsNullOrWhiteSpace(newTarget))
                     throw new SynologyException("Enter your NAS QuickConnect ID.", -1);
                 if (newTarget != target) { baseUrl = null; apis.Clear(); }
-                target = newTarget; username = r.Username.Trim(); password = r.Password; sid = null;
+                target = newTarget; username = r.Username!.Trim(); password = r.Password; sid = null;
             }
             try { await SignInAsync(r.Otp, ct); }
-            catch (SynologyException e) when (e.Code is 400 or 401 or 402 or 406 or 407)
+            catch (SynologyException e) when (e.Code is 400 or 401 or 402 or 406 or 407 or 408 or 409 or 410)
             {
-                password = null; // never keep a password the NAS rejected
+                // Never keep a password the NAS rejected, in memory or on disk
+                if (store.Load() is { } s && s.Username == username && s.Password == password) store.Forget();
+                password = null;
                 throw;
+            }
+            if (typed)
+            {
+                if (r.Remember == true) store.Save(new SavedLogin(target, username!, password!));
+                else if (r.Remember == false) store.Forget();
             }
         }
         finally { gate.Release(); }
     }
 
+    /// <summary>Signs out. Signing out also forgets the saved password.</summary>
     public async Task DisconnectAsync(CancellationToken ct)
     {
         await gate.WaitAsync(ct);
@@ -94,6 +113,7 @@ public sealed class SynologyService(
             if (sid != null && apis.TryGetValue("SYNO.API.Auth", out var auth))
                 try { await CallAsync(auth.Path, new() { ["api"] = "SYNO.API.Auth", ["version"] = "1", ["method"] = "logout", ["session"] = "FileStation", ["_sid"] = sid }, ct); } catch { }
             sid = null; username = null; password = null;
+            store.Forget();
         }
         finally { gate.Release(); }
     }
@@ -269,7 +289,7 @@ public sealed class SynologyService(
 
 /// <summary>
 /// Stores the 2FA device token (one per user and NAS) in the user's app data folder, never in the project.
-/// With it DSM doesn't ask for the code again; the password is still asked every time the server restarts.
+/// With it DSM doesn't ask for the code again. The password itself is kept by <see cref="CredentialStore"/>, only if the user asks.
 /// </summary>
 static class DeviceToken
 {

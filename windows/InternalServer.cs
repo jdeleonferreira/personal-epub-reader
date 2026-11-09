@@ -39,10 +39,11 @@ public sealed class InternalServer : IAsyncDisposable
         { BaseAddress = address, Timeout = Timeout.InfiniteTimeSpan };
     }
 
-    public static async Task<InternalServer> StartAsync(CancellationToken ct = default)
+    /// <param name="exit">Closes the app; the server calls it after starting an update.</param>
+    public static async Task<InternalServer> StartAsync(Action? exit = null, CancellationToken ct = default)
     {
         var token = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
-        var app = AtrilServer.Create(new ServerOptions { Token = token, Urls = "http://127.0.0.1:0", AppMode = true });
+        var app = AtrilServer.Create(new ServerOptions { Token = token, Urls = "http://127.0.0.1:0", AppMode = true, Exit = exit });
         await app.StartAsync(ct);
         var address = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.First();
         return new InternalServer(app, new Uri(address), token);

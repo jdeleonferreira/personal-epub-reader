@@ -29,6 +29,7 @@
     <Compile Include="..\AtrilServer.cs" Link="Shared\AtrilServer.cs" />
     <Compile Include="..\Synology\*.cs" LinkBase="Shared\Synology" />
     <Compile Include="..\Local\*.cs" LinkBase="Shared\Local" />
+    <Compile Include="..\Updates\*.cs" LinkBase="Shared\Updates" />
     <Content Include="..\wwwroot\**" LinkBase="wwwroot" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\appsettings.json" Link="appsettings.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
