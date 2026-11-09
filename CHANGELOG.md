@@ -5,6 +5,8 @@ Versions follow [semantic versioning](https://semver.org/): MAJOR.MINOR.PATCH.
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-09
+
 ### Added
 - **Remember the Synology password** (optional, ticked by default in the sign-in form). It is saved encrypted in
   `%LOCALAPPDATA%\Atril\synology-login.json` with ASP.NET Core Data Protection; on Windows its keys are protected with

@@ -1,5 +1,5 @@
 // Caches the app so it opens offline. Books live in the local folder (or in IndexedDB without a server).
-const CACHE = "atril-1.1.0";
+const CACHE = "atril-1.2.0";
 const SHELL = ["./", "index.html", "lib/jszip.min.js", "lib/epub.min.js", "catalog.js", "manifest.webmanifest", "icon-192.png", "icon-512.png", "icon.svg"];
 
 self.addEventListener("install", e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())));
