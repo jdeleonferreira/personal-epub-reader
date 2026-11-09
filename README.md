@@ -195,6 +195,9 @@ To publish a version:
    browser version for Windows, macOS and Linux, and publishes the *Release* with the CHANGELOG notes for that version.
    Every Atril already installed offers the update the next time it opens.
 
+   If a Release didn't get created (for example, the tag was pushed together with a new workflow file),
+   run it by hand: `gh workflow run release.yml -f tag=vX.Y.Z`.
+
 ## Manual publish
 
 ```bash

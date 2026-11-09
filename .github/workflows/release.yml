@@ -7,9 +7,17 @@ name: Release
 on:
   push:
     tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to publish (e.g. v1.2.0)'
+        required: true
 
 permissions:
   contents: write
+
+env:
+  TAG: ${{ inputs.tag || github.ref_name }}
 
 jobs:
   check:
@@ -18,12 +26,14 @@ jobs:
       version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
       - name: No secrets in the repository
         run: bash scripts/check-secrets.sh --all
       - name: The tag matches Directory.Build.props
         id: version
         run: |
-          tag="${GITHUB_REF_NAME#v}"
+          tag="${TAG#v}"
           project="$(grep -oP '(?<=<Version>)[^<]+' Directory.Build.props)"
           if [ "$tag" != "$project" ]; then echo "::error::Tag v$tag doesn't match the version in Directory.Build.props ($project)"; exit 1; fi
           echo "version=$tag" >> "$GITHUB_OUTPUT"
@@ -50,6 +60,8 @@ jobs:
         arch: [x64, arm64]
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
@@ -76,6 +88,8 @@ jobs:
         rid: [win-x64, linux-x64, osx-arm64, osx-x64]
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
@@ -101,6 +115,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" \
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" \
             --title "Atril ${{ needs.check.outputs.version }}" --notes-file dist/notes.md \
             dist/*.zip
