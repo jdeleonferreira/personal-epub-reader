@@ -5,6 +5,8 @@ Versions follow [semantic versioning](https://semver.org/): MAJOR.MINOR.PATCH.
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-11-09
+
 ### Fixed
 - **Update button (Windows).** Installing an update always failed with "Atril's folder is in use": the update script
   started inside Atril's program folder (where the Start menu shortcut opens Atril), and Windows doesn't let a folder be
