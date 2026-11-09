@@ -5,6 +5,12 @@ Versions follow [semantic versioning](https://semver.org/): MAJOR.MINOR.PATCH.
 
 ## [Unreleased]
 
+### Added
+- **Highlights.** Select text while reading and pick a color (yellow, green, blue or pink) to highlight it. Highlights
+  are saved with the book and are still there after closing the book or Atril, in page and scroll layout and with any
+  background. Tap a highlight to change its color, copy its text or remove it. The new **Highlights** button lists all of
+  a book's highlights in reading order, with chapter and position; tap one to jump to it.
+
 ## [1.2.0] - 2026-11-09
 
 ### Added

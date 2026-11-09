@@ -10,7 +10,7 @@ In short: **Atril doesn't collect, send or sell personal data. It has no account
 Everything stays on your own device and is only used by Atril:
 
 - **Your books:** the EPUB files you open or download are saved in the folder you choose (by default `Documents\Atril`).
-- **Your library and reading progress:** title, author, cover thumbnail, the page you're on and your reading settings (theme, font, size).
+- **Your library and reading progress:** title, author, cover thumbnail, the page you're on, the passages you highlight and your reading settings (theme, font, size).
 - **What Atril works out about each book**, to spot duplicates and sort them by topic: ISBN and identifiers, estimated
   length, knowledge area and topic. It is computed on your device; the book's text is never sent anywhere.
 - **Data to connect to your Synology NAS** (only if you use that feature):

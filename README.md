@@ -71,6 +71,13 @@ The chosen path is stored in `%LOCALAPPDATA%\Atril\config.json` (Windows) or `~/
 The browser only keeps each book's record (title, cover) and your reading progress.
 When Atril runs without its server (plain web version), books are stored inside the browser.
 
+## Highlights
+
+Select text while reading and choose a color to highlight it. Tap a highlight to change its color, copy it or remove it.
+**Highlights** in the reader's top bar lists the book's highlights in reading order; tap one to go there.
+Highlights are kept per book in the browser's storage (like the reading position), so they stay after closing the book
+or Atril. Deleting a book from the library also deletes its highlights.
+
 ## Duplicates
 
 Before adding a book (Open EPUB, drag and drop, double click in File Explorer) or downloading it from the Synology,

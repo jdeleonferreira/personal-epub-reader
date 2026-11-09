@@ -108,6 +108,24 @@ select.cat:hover, select.cat:focus { border-color: var(--line); color: var(--ink
 .rfoot { display: flex; align-items: center; gap: 12px; padding: 8px 16px 12px; font-size: 12px; color: var(--rmuted); font-variant-numeric: tabular-nums; }
 .rfoot .chap { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #seek { width: min(40%, 320px); accent-color: var(--accent); }
+/* Highlights: floating color bar over the selection, and a panel listing the book's highlights */
+.hl-pop { position: absolute; z-index: 6; display: flex; align-items: center; gap: 4px; padding: 5px; background: var(--page); color: var(--text); border: 1px solid var(--rline); border-radius: 99px; box-shadow: 0 8px 24px -8px rgb(0 0 0 / .4); transform: translateX(-50%); white-space: nowrap; }
+.hl-pop .c { width: 26px; height: 26px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
+.hl-pop .c[aria-pressed="true"] { border-color: var(--text); }
+.hl-pop .t { background: none; border: 0; border-left: 1px solid var(--rline); padding: 0 10px; height: 26px; cursor: pointer; color: var(--text); font-size: 13px; }
+.hl-pop .t:hover { color: var(--accent); }
+#hls { right: 12px; width: min(360px, calc(100vw - 24px)); max-height: calc(100% - 80px); overflow: auto; padding: 8px; }
+.hl-head { padding: 6px 10px 8px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--rmuted); font-weight: 600; }
+.hl-empty { padding: 4px 10px 10px; color: var(--rmuted); font-size: 14px; }
+.hl-item { display: flex; align-items: flex-start; gap: 4px; border-radius: 6px; }
+.hl-item:hover { background: var(--rline); }
+.hl-item .go { flex: 1; min-width: 0; display: flex; gap: 10px; background: none; border: 0; padding: 8px 4px 8px 10px; text-align: left; cursor: pointer; color: inherit; }
+.hl-item .go i { flex: none; width: 4px; border-radius: 2px; align-self: stretch; }
+.hl-item .go span { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.hl-item .q { font-family: var(--font-display); font-size: 14px; line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; }
+.hl-item small { font-size: 12px; color: var(--rmuted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hl-item .x { background: none; border: 0; cursor: pointer; color: var(--rmuted); font-size: 18px; line-height: 1; padding: 8px 10px; border-radius: 6px; }
+.hl-item .x:hover { color: var(--danger); }
 .loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--rmuted); font-size: 14px; }
 
 .panel { position: absolute; top: 56px; z-index: 5; background: var(--page); color: var(--text); border: 1px solid var(--rline); border-radius: var(--radius); box-shadow: 0 12px 32px -12px rgb(0 0 0 / .35); }
@@ -274,6 +292,9 @@ select.cat:hover, select.cat:focus { border-color: var(--line); color: var(--ink
       <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span class="lbl">Contents</span>
     </button>
     <div class="title" id="rTitle"></div>
+    <button class="ib" id="hlBtn" type="button" title="Highlights" aria-expanded="false">
+      <svg viewBox="0 0 24 24"><path d="M14.5 4.5l5 5-8.5 8.5H6v-5z"/><path d="M4 21h16"/></svg><span class="lbl">Highlights</span>
+    </button>
     <button class="ib" id="setBtn" type="button" title="Appearance" aria-expanded="false">
       <svg viewBox="0 0 24 24"><path d="M4 19l5-14h2l5 14M6.5 13h7"/><path d="M17 19l2.5-7 2.5 7M18 17h3"/></svg><span class="lbl">Appearance</span>
     </button>
@@ -284,6 +305,8 @@ select.cat:hover, select.cat:focus { border-color: var(--line); color: var(--ink
     <button class="turn prev" id="prevBtn" type="button" aria-label="Previous page"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
     <button class="turn next" id="nextBtn" type="button" aria-label="Next page"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
     <nav class="panel" id="toc" hidden aria-label="Contents"></nav>
+    <div class="panel" id="hls" hidden aria-label="Highlights"></div>
+    <div class="hl-pop" id="hlPop" hidden role="toolbar" aria-label="Highlight"></div>
     <div class="panel" id="settings" hidden>
       <div class="row"><span>Background</span>
         <div class="seg" id="modeSeg">
@@ -432,7 +455,7 @@ select.cat:hover, select.cat:focus { border-color: var(--line); color: var(--ink
     }
     return [...memBooks.values()].sort((a, b) => (b.lastRead || b.added) - (a.lastRead || a.added));
   }
-  async function delBook(id) { memBooks.delete(id); ls.del("pos:" + id); if (persistent) { try { await tx("readwrite", s => s.delete(id)); } catch {} } }
+  async function delBook(id) { memBooks.delete(id); ls.del("pos:" + id); ls.del("hl:" + id); if (persistent) { try { await tx("readwrite", s => s.delete(id)); } catch {} } }
 
   // action: optional { label, fn } shown as a button inside the message
   function toast(msg, action) {
@@ -660,7 +683,7 @@ select.cat:hover, select.cat:focus { border-color: var(--line); color: var(--ink
     $("sizeOut").textContent = S.size + "%";
     const paged = S.flow === "paginated"; $("prevBtn").hidden = !paged; $("nextBtn").hidden = !paged;
   }
-  function saveSettings() { ls.set("settings", S); syncControls(); applyStyles(); }
+  function saveSettings() { const night = $("reader").dataset.mode === "night"; ls.set("settings", S); syncControls(); applyStyles(); if (night !== (S.mode === "night")) paintHighlights(); }
 
   function flattenToc(items, depth = 0, out = []) { for (const it of items) { out.push({ label: it.label.trim(), href: it.href, depth }); if (it.subitems && it.subitems.length) flattenToc(it.subitems, depth + 1, out); } return out; }
   function chapterFor(href) {
@@ -683,6 +706,7 @@ select.cat:hover, select.cat:focus { border-color: var(--line); color: var(--ink
   async function mountRendition(targetCfi) {
     if (rend) { rend.destroy(); rend = null; }
     if (book) { book.destroy(); book = null; }
+    painted.clear(); hidePop();
     $("viewer").innerHTML = "";
     book = ePub(curData.slice(0), { replacements: "blobUrl" });
     rend = book.renderTo("viewer", { width: "100%", height: "100%", flow: S.flow, spread: "auto", manager: S.flow === "paginated" ? "default" : "continuous", allowScriptedContent: false });
@@ -698,7 +722,10 @@ select.cat:hover, select.cat:focus { border-color: var(--line); color: var(--ink
     const nav = await book.loaded.navigation; tocFlat = flattenToc(nav.toc || []); buildToc();
     rend.on("relocated", onRelocated);
     rend.on("keyup", onKey);
-    rend.on("click", closePanels);
+    rend.on("click", onReaderClick);
+    rend.on("selected", onSelected);
+    rend.on("markClicked", onMarkClicked);
+    paintHighlights();
     const thisBook = book;
     book.ready.then(() => book.locations.generate(1200)).then(() => { if (book !== thisBook) return; $("seek").disabled = false; if (rend.location) onRelocated(rend.location); }).catch(() => {});
   }
@@ -707,6 +734,7 @@ select.cat:hover, select.cat:focus { border-color: var(--line); color: var(--ink
     const cfi = where.start.cfi; let pct = null;
     if (book.locations.length()) pct = book.locations.percentageFromCfi(cfi);
     if (where.atEnd) pct = 1;
+    hidePop();
     $("chap").textContent = chapterFor(where.start.href);
     if (pct != null) { $("pct").textContent = Math.round(pct * 100) + "%"; if (!seeking) $("seek").value = Math.round(pct * 1000); }
     const prev = ls.get("pos:" + cur.id, {}) || {};
@@ -721,15 +749,135 @@ select.cat:hover, select.cat:focus { border-color: var(--line); color: var(--ink
       n.appendChild(a);
     }
   }
-  function closePanels() { for (const [p, b] of [["toc", "tocBtn"], ["settings", "setBtn"]]) { $(p).hidden = true; $(b).setAttribute("aria-expanded", "false"); } }
+  function closePanels() { hidePop(); for (const [p, b] of [["toc", "tocBtn"], ["hls", "hlBtn"], ["settings", "setBtn"]]) { $(p).hidden = true; $(b).setAttribute("aria-expanded", "false"); } }
   function toggle(p, b) { const open = $(p).hidden; closePanels(); $(p).hidden = !open; $(b).setAttribute("aria-expanded", String(open)); }
   function onKey(e) {
     if ($("reader").hidden) return;
     if (e.key === "ArrowRight" || e.key === "PageDown") rend && rend.manager && rend.next();
     else if (e.key === "ArrowLeft" || e.key === "PageUp") rend && rend.manager && rend.prev();
-    else if (e.key === "Escape") { if (!$("toc").hidden || !$("settings").hidden) closePanels(); else closeReader(); }
+    else if (e.key === "Escape") { if (!$("hlPop").hidden || !$("toc").hidden || !$("hls").hidden || !$("settings").hidden) closePanels(); else closeReader(); }
   }
+  /* ---------- Highlights ----------
+     Saved per book in localStorage ("hl:<book id>"), next to the reading position, so they stay when the
+     book is closed, the app restarts or the layout changes. Each one: { cfi (EPUB CFI range), text, color, chap, at }. */
+  const HL_COLORS = { yellow: "#f5cf3a", green: "#6fcf7f", blue: "#6aaef0", pink: "#f08fbd" };
+  const hlLoad = () => (cur && ls.get("hl:" + cur.id, [])) || [];
+  const hlSave = list => { if (cur) { if (list.length) ls.set("hl:" + cur.id, list); else ls.del("hl:" + cur.id); } };
+  const painted = new Set();
+  let pop = null; // { cfi, text, contents, existing }
+  let markHitAt = 0;
+  function hlStyle(color) {
+    const night = S.mode === "night";
+    return { fill: HL_COLORS[color] || HL_COLORS.yellow, "fill-opacity": night ? "0.32" : "0.42", "mix-blend-mode": night ? "normal" : "multiply" };
+  }
+  function paintOne(h) {
+    if (painted.has(h.cfi)) { try { rend.annotations.remove(h.cfi, "highlight"); } catch {} }
+    try { rend.annotations.highlight(h.cfi, { color: h.color }, null, "atril-hl", hlStyle(h.color)); painted.add(h.cfi); } catch (e) { console.warn("Couldn't show a highlight", e); }
+  }
+  function unpaint(cfi) { try { rend.annotations.remove(cfi, "highlight"); } catch {} painted.delete(cfi); }
+  function paintHighlights() {
+    if (!rend) return;
+    for (const c of [...painted]) unpaint(c);
+    for (const h of hlLoad()) paintOne(h);
+  }
+  function hidePop() { $("hlPop").hidden = true; pop = null; }
+  // Places the color bar above the text (below it when there's no room), inside the reading area
+  function placePop(cfi, contents) {
+    const el = $("hlPop"); const stage = el.parentElement.getBoundingClientRect();
+    let first, last;
+    try {
+      const range = contents && contents.range ? contents.range(cfi) : rend.getRange(cfi);
+      const rects = [...range.getClientRects()].filter(r => r.width || r.height);
+      const fr = (contents.document.defaultView.frameElement || contents.document.documentElement).getBoundingClientRect();
+      const off = r => ({ left: fr.left + r.left - stage.left, right: fr.left + r.right - stage.left, top: fr.top + r.top - stage.top, bottom: fr.top + r.bottom - stage.top });
+      first = off(rects[0] || range.getBoundingClientRect()); last = off(rects[rects.length - 1] || range.getBoundingClientRect());
+    } catch { first = last = { left: stage.width / 2, right: stage.width / 2, top: 60, bottom: 60 }; }
+    el.hidden = false;
+    const w = el.offsetWidth, h = el.offsetHeight;
+    const x = Math.min(Math.max((first.left + first.right) / 2, w / 2 + 8), stage.width - w / 2 - 8);
+    let y = first.top - h - 10;
+    if (y < 6) y = Math.min(last.bottom + 10, stage.height - h - 6);
+    el.style.left = x + "px"; el.style.top = Math.max(6, y) + "px";
+  }
+  function showPop(state) {
+    pop = state;
+    const el = $("hlPop"); el.innerHTML = "";
+    for (const [name, color] of Object.entries(HL_COLORS)) {
+      const b = document.createElement("button"); b.type = "button"; b.className = "c"; b.style.background = color;
+      b.title = name[0].toUpperCase() + name.slice(1); b.setAttribute("aria-label", "Highlight in " + name);
+      b.setAttribute("aria-pressed", String(!!state.existing && state.existing.color === name));
+      b.onclick = () => applyColor(name); el.appendChild(b);
+    }
+    const tb = (label, fn) => { const b = document.createElement("button"); b.type = "button"; b.className = "t"; b.textContent = label; b.onclick = fn; el.appendChild(b); };
+    tb("Copy", copyPop);
+    if (state.existing) tb("Remove", () => removeHighlight(state.cfi));
+    placePop(state.cfi, state.contents);
+  }
+  function clearSelection(contents) { try { contents.window.getSelection().removeAllRanges(); } catch {} }
+  function onSelected(cfi, contents) {
+    let text = "";
+    try { text = (contents.range ? contents.range(cfi) : rend.getRange(cfi)).toString().replace(/\s+/g, " ").trim(); } catch {}
+    if (!text) return;
+    closePanels();
+    showPop({ cfi, text, contents, existing: null });
+  }
+  function onMarkClicked(cfi, data, contents) {
+    if (Date.now() - markHitAt < 400 && pop && pop.cfi === cfi) return; // touchstart and click of the same tap
+    markHitAt = Date.now();
+    const h = hlLoad().find(x => x.cfi === cfi); if (!h) return;
+    setTimeout(() => { closePanels(); showPop({ cfi, text: h.text, contents, existing: h }); }, 0);
+  }
+  function onReaderClick() { if (Date.now() - markHitAt < 600) return; closePanels(); }
+  function applyColor(color) {
+    if (!pop) return;
+    const list = hlLoad(); let h = list.find(x => x.cfi === pop.cfi);
+    if (h) h.color = color;
+    else {
+      let chap = ""; try { chap = chapterFor(book.spine.get(pop.cfi).href); } catch {}
+      h = { cfi: pop.cfi, text: pop.text.slice(0, 2000), color, chap, at: Date.now() }; list.push(h);
+    }
+    hlSave(list); paintOne(h); clearSelection(pop.contents); hidePop(); renderHlPanel();
+  }
+  function removeHighlight(cfi) {
+    hlSave(hlLoad().filter(x => x.cfi !== cfi)); unpaint(cfi);
+    if (pop && pop.cfi === cfi) hidePop();
+    renderHlPanel(); toast("Highlight removed");
+  }
+  async function copyPop() {
+    if (!pop) return;
+    const text = pop.text;
+    try { await navigator.clipboard.writeText(text); }
+    catch {
+      const ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); } catch {} ta.remove();
+    }
+    clearSelection(pop.contents); hidePop(); toast("Text copied");
+  }
+  function hlSorted() {
+    const cfi = new ePub.CFI();
+    return hlLoad().sort((a, b) => { try { return cfi.compare(a.cfi, b.cfi); } catch { return a.at - b.at; } });
+  }
+  function renderHlPanel() {
+    const n = $("hls"); if (n.hidden) return;
+    const list = hlSorted(); n.innerHTML = "";
+    const head = document.createElement("div"); head.className = "hl-head"; head.textContent = list.length ? `Highlights · ${list.length}` : "Highlights"; n.appendChild(head);
+    if (!list.length) { n.insertAdjacentHTML("beforeend", '<div class="hl-empty">Select text in the book and choose a color to highlight it. Your highlights stay when you close the book.</div>'); return; }
+    const hasLoc = book && book.locations.length();
+    for (const h of list) {
+      const row = document.createElement("div"); row.className = "hl-item";
+      row.innerHTML = `<button class="go" type="button"><i></i><span><span class="q"></span><small></small></span></button><button class="x" type="button" aria-label="Remove highlight" title="Remove highlight">×</button>`;
+      row.querySelector("i").style.background = HL_COLORS[h.color] || HL_COLORS.yellow;
+      row.querySelector(".q").textContent = h.text;
+      let pct = null; if (hasLoc) { try { const start = new ePub.CFI(h.cfi); start.collapse(true); pct = book.locations.percentageFromCfi(start.toString()); } catch {} }
+      row.querySelector("small").textContent = [h.chap, pct != null ? Math.round(pct * 100) + "%" : ""].filter(Boolean).join(" · ") || new Date(h.at).toLocaleDateString();
+      row.querySelector(".go").onclick = () => { closePanels(); rend.display(h.cfi); };
+      row.querySelector(".x").onclick = () => removeHighlight(h.cfi);
+      n.appendChild(row);
+    }
+  }
+
   async function closeReader() {
+    painted.clear(); hidePop();
     if (rend) { rend.destroy(); rend = null; } if (book) { book.destroy(); book = null; }
     curData = null;
     $("reader").hidden = true; $("library").hidden = false; await renderLibrary();
@@ -746,6 +894,7 @@ select.cat:hover, select.cat:focus { border-color: var(--line); color: var(--ink
   $("backBtn").onclick = closeReader;
   $("tocBtn").onclick = () => toggle("toc", "tocBtn");
   $("setBtn").onclick = () => toggle("settings", "setBtn");
+  $("hlBtn").onclick = () => { toggle("hls", "hlBtn"); renderHlPanel(); };
   $("prevBtn").onclick = () => rend && rend.manager && rend.prev();
   $("nextBtn").onclick = () => rend && rend.manager && rend.next();
   document.addEventListener("keyup", onKey);
