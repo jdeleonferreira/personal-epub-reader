@@ -5,6 +5,8 @@ Versions follow [semantic versioning](https://semver.org/): MAJOR.MINOR.PATCH.
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-09
+
 ### Added
 - **Highlights.** Select text while reading and pick a color (yellow, green, blue or pink) to highlight it. Highlights
   are saved with the book and are still there after closing the book or Atril, in page and scroll layout and with any
